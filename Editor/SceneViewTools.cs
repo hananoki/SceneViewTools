@@ -1,8 +1,7 @@
 ﻿//#define TEST_FOV
 //#define TEST_TILE
 
-using Hananoki;
-using Hananoki;
+using Hananoki.Extensions;
 
 using System.Linq;
 using UnityEditor;
