@@ -19,16 +19,15 @@ namespace Hananoki.SceneViewTools {
 			public GUIStyle popup;
 			public GUIStyle toggle;
 			const int WIDTH = 16;
-			
+
 			public Styles() {
 				toggle = new GUIStyle( EditorStyles.toggle );
-				
+
 #if UNITY_2019_3_OR_NEWER
 				popup = new GUIStyle( "MiniPopup" );
 #else
 				popup = new GUIStyle( "Popup" );
 #endif
-				
 			}
 		}
 
@@ -36,7 +35,7 @@ namespace Hananoki.SceneViewTools {
 		internal static Styles s_styles;
 
 
-		
+
 
 #if TEST_FOV
 		static float FOV = -1;
@@ -139,7 +138,7 @@ namespace Hananoki.SceneViewTools {
 				//Time.timeScale = GUI.Slider( rcPop, Time.timeScale, 0.0f, 0.00f, 1.00f, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb, true, controlID );
 				//EditorGUI.DrawRect( rcPop, new Color(0,0,1,0.50f));
 
-				Time.timeScale = EditorGUI.Slider( rcPop, Time.timeScale, 0.00f, 1.00f);
+				Time.timeScale = EditorGUI.Slider( rcPop, Time.timeScale, 0.00f, 1.00f );
 			}
 
 		}
@@ -213,7 +212,7 @@ namespace Hananoki.SceneViewTools {
 
 				var rc = rcToggle.AddW( 2 );
 				EditorGUI.DrawRect( rc, E.i.uiBkColor );
-				sceneView.orthographic = GUI.Toggle( rcToggle, sceneView.orthographic, cont , s_styles.toggle );
+				sceneView.orthographic = GUI.Toggle( rcToggle, sceneView.orthographic, cont, s_styles.toggle );
 			}
 		}
 	}

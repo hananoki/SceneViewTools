@@ -5,9 +5,10 @@ namespace Hananoki.SceneViewTools {
   public static class Package {
     public const string name = "SceneViewTools";
     public const string editorPrefName = "Hananoki.SceneViewTools";
-    public const string version = "1.0.1";
+    public const string version = "1.0.2";
   }
   
+#if UNITY_EDITOR
   [EditorLocalizeClass]
   public class LocalizeEvent {
     [EditorLocalizeMethod]
@@ -19,4 +20,5 @@ namespace Hananoki.SceneViewTools {
       }
     }
   }
+#endif
 }
