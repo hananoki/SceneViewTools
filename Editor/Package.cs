@@ -5,7 +5,7 @@ namespace Hananoki.SceneViewTools {
   public static class Package {
     public const string name = "SceneViewTools";
     public const string editorPrefName = "Hananoki.SceneViewTools";
-    public const string version = "1.0.2";
+    public const string version = "1.0.3";
   }
   
 #if UNITY_EDITOR

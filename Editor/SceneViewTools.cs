@@ -22,12 +22,12 @@ namespace Hananoki.SceneViewTools {
 
 			public Styles() {
 				toggle = new GUIStyle( EditorStyles.toggle );
-
-#if UNITY_2019_3_OR_NEWER
-				popup = new GUIStyle( "MiniPopup" );
-#else
-				popup = new GUIStyle( "Popup" );
-#endif
+				if( UnitySymbol.Has( "UNITY_2019_3_OR_NEWER" ) ) {
+					popup = new GUIStyle( "MiniPopup" );
+				}
+				else {
+					popup = new GUIStyle( "Popup" );
+				}
 			}
 		}
 
@@ -186,9 +186,9 @@ namespace Hananoki.SceneViewTools {
 				}
 				else {
 					rcRad.y = rcPop.y - 16;
-#if UNITY_2019_3_OR_NEWER
-					rcRad.y -= 2;
-#endif
+					if( UnitySymbol.Has( "UNITY_2019_3_OR_NEWER" ) ) {
+						rcRad.y -= 2;
+					}
 					var cont = EditorHelper.TempContent( S._MatchGameView );
 					var sz = EditorStyles.toggle.CalcSize( cont );
 					rcRad.width = sz.x;
@@ -203,9 +203,9 @@ namespace Hananoki.SceneViewTools {
 			if( E.i.toggleOrthographic ) {
 				rcToggle.y = rcPop.y + 1;
 				rcToggle.x = rcPop.x + rcPop.width;
-#if UNITY_2019_3_OR_NEWER
-				rcToggle.x += 2;
-#endif
+				if( UnitySymbol.Has( "UNITY_2019_3_OR_NEWER" ) ) {
+					rcToggle.x += 2;
+				}
 				var cont = EditorHelper.TempContent( "Iso" );
 				var sz = EditorStyles.toggle.CalcSize( cont );
 				rcToggle.width = sz.x;

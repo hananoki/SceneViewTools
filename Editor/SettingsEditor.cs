@@ -1,9 +1,8 @@
 ﻿
-//#define TEST_OBJECTSTAT
-
+using Hananoki.Extensions;
+using Hananoki.SharedModule;
 using UnityEditor;
 using UnityEngine;
-using Hananoki.Extensions;
 
 using E = Hananoki.SceneViewTools.SettingsEditor;
 using SS = Hananoki.SharedModule.S;
@@ -44,37 +43,34 @@ namespace Hananoki.SceneViewTools {
 
 	public class SettingsEditorWindow : HSettingsEditorWindow {
 
-		static Vector2 scrollPos;
-
 		public static void Open() {
-			var window = GetWindow<SettingsEditorWindow>();
-			window.SetTitle( new GUIContent( Package.name, Icon.Get( "SettingsIcon" ) ) );
+			var w = GetWindow<SettingsEditorWindow>();
+			w.SetTitle( new GUIContent( Package.name, EditorIcon.settings ) );
+			w.headerMame = Package.name;
+			w.headerVersion = Package.version;
+			w.gui = DrawGUI;
 		}
 
-		void OnEnable() {
-			drawGUI = DrawGUI;
+
+		public static void DrawGUI() {
 			E.Load();
-		}
 
-
-		static void DrawGUI() {
 			EditorGUI.BeginChangeCheck();
 
-			using( new PreferenceLayoutScope( ref scrollPos ) ) {
-				E.i.Enable = HEditorGUILayout.ToggleLeft( SS._Enable, E.i.Enable );
-				EditorGUI.indentLevel++;
-				GUILayout.Space( 8f );
+			E.i.Enable = HEditorGUILayout.ToggleLeft( SS._Enable, E.i.Enable );
+			EditorGUI.indentLevel++;
+			GUILayout.Space( 8f );
 
-				E.i.multiSceneExec = HEditorGUILayout.ToggleLeft( S._Executeevenwithmultiplesceneviews, E.i.multiSceneExec );
+			E.i.multiSceneExec = HEditorGUILayout.ToggleLeft( S._Executeevenwithmultiplesceneviews, E.i.multiSceneExec );
 
-				E.i.enableTimeScaleSlider = HEditorGUILayout.ToggleLeft( S._TimeScaleSlider, E.i.enableTimeScaleSlider );
-				E.i.syncScene2Game = HEditorGUILayout.ToggleLeft( S._Syncscenecameratogamecamera, E.i.syncScene2Game );
-				E.i.toggleOrthographic = HEditorGUILayout.ToggleLeft( S._ToggleOrthographic, E.i.toggleOrthographic );
+			E.i.enableTimeScaleSlider = HEditorGUILayout.ToggleLeft( S._TimeScaleSlider, E.i.enableTimeScaleSlider );
+			E.i.syncScene2Game = HEditorGUILayout.ToggleLeft( S._Syncscenecameratogamecamera, E.i.syncScene2Game );
+			E.i.toggleOrthographic = HEditorGUILayout.ToggleLeft( S._ToggleOrthographic, E.i.toggleOrthographic );
 
-				E.i.uiBkColor = EditorGUILayout.ColorField( SS._BackColor, E.i.uiBkColor );
-				E.i.textColor = EditorGUILayout.ColorField( SS._TextColor, E.i.textColor );
-				EditorGUI.indentLevel--;
-			}
+			E.i.uiBkColor = EditorGUILayout.ColorField( SS._BackColor, E.i.uiBkColor );
+			E.i.textColor = EditorGUILayout.ColorField( SS._TextColor, E.i.textColor );
+			EditorGUI.indentLevel--;
+			//}
 
 			if( EditorGUI.EndChangeCheck() ) {
 				E.Save();
@@ -85,10 +81,16 @@ namespace Hananoki.SceneViewTools {
 				ObjectStat.Enable();
 			}
 #endif
+			if( GUILayout.Button( "remove" ) ) {
+				SceneViewUtils.RemoveGUI( SceneViewTools.OnSceneGUI );
+			}
+			if( GUILayout.Button( "remove" ) ) {
+				SceneViewUtils.AddGUI( SceneViewTools.OnSceneGUI );
+			}
 		}
 
 
-
+#if !ENABLE_HANANOKI_SETTINGS
 #if UNITY_2018_3_OR_NEWER && !ENABLE_LEGACY_PREFERENCE
 
 		[SettingsProvider]
@@ -106,8 +108,25 @@ namespace Hananoki.SceneViewTools {
 		[PreferenceItem( Package.name )]
 		public static void PreferencesGUI() {
 #endif
-			E.Load();
-			DrawGUI();
+			using( new LayoutScope() ) DrawGUI();
+		}
+#endif
+	}
+
+
+
+#if ENABLE_HANANOKI_SETTINGS
+	[SettingsClass]
+	public class SettingsEvent {
+		[SettingsMethod]
+		public static SettingsItem RegisterSettings() {
+			return new SettingsItem() {
+				//mode = 1,
+				displayName = Package.name,
+				version = Package.version,
+				gui = SettingsEditorWindow.DrawGUI,
+			};
 		}
 	}
+#endif
 }
