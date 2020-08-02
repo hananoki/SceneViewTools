@@ -1,14 +1,12 @@
 {
   "name": "com.hananoki.scene-view-tools",
   "displayName": "SceneViewTools",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "unity": "2018.3",
   "description": "Add tools to SceneView",
   "keywords": [
     "Editor"
   ],
   "category": "Editor Extentions",
-  "dependencies": {
-    "com.hananoki.shared-module": "https://github.com/hananoki/SharedModule.git"
-  }
+  "dependencies": {}
 }

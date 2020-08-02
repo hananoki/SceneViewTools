@@ -1,5 +1,10 @@
 # SceneViewTools
 
+## [1.0.4] - 2020-08-02
+
+### Changed
+- Changed dependencies in package.json
+
 ## [1.0.3] - 2020-07-16
 - SharedModule v1.5.0 is supported
 

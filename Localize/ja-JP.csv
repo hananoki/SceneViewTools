@@ -1,6 +1,4 @@
-
-# SceneViewTools
-TimeScaleSlider	タイムスケールスライダー
+﻿TimeScaleSlider	タイムスケールスライダー
 Execute even with multiple scene views	シーンビューが複数でも実行する
 Sync scene camera to game camera	シーンカメラをゲームカメラに同期する
 Match GameView	GameViewに合わせる
