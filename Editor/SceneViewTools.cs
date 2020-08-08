@@ -7,9 +7,11 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using System.Collections.Generic;
+using UnityEditor.EditorTools;
 
 using E = Hananoki.SceneViewTools.SettingsEditor;
-
+using UnityScene = UnityEngine.SceneManagement.Scene;
 
 namespace Hananoki.SceneViewTools {
 	[InitializeOnLoad]
@@ -34,8 +36,9 @@ namespace Hananoki.SceneViewTools {
 
 		internal static Styles s_styles;
 
-
-
+		static Light[] s_lights = new Light[ 0 ];
+		static bool s_lightTool;
+		static bool s_lookAtTool;
 
 #if TEST_FOV
 		static float FOV = -1;
@@ -50,12 +53,12 @@ namespace Hananoki.SceneViewTools {
 			E.Load();
 			SceneViewUtils.AddGUI( OnSceneGUI );
 
-			EditorSceneManager.sceneOpened += ( scene, mode ) => {
-				s_cameraSelect = 0;
-			};
+			EditorSceneManager.sceneOpened += OnSceneOpened;
 
-#if TEST_FOV
-			UTJ.UnityEditorExtension.SceneViewFovControl.SceneViewHiddenApi.AddOnPreSceneGUIDelegate( OnScene );
+			Selection.selectionChanged += OnSelectionChanged;
+
+#if UNITY_2019_1_OR_NEWER
+			EditorTools.activeToolChanged += OnActiveToolChanged;
 #endif
 
 #if TEST_TILE
@@ -71,6 +74,26 @@ namespace Hananoki.SceneViewTools {
 #endif
 		}
 
+		static void OnSceneOpened( UnityScene scene, OpenSceneMode mode ) {
+			s_lights = new Light[ 0 ];
+			s_lightTool=false;
+			s_lookAtTool = false;
+			s_cameraSelect = 0;
+		}
+
+		static void OnSelectionChanged() {
+			s_lights = Selection.gameObjects.Select( x => x.GetComponent<Light>() ).Where( x => x != null ).ToArray();
+			//s_lightTool = false;
+		}
+
+		static void OnActiveToolChanged() {
+			if( "NoneTool" == EditorTools.activeToolType.Name ) return;
+
+			s_lightTool = false;
+			s_lookAtTool = false;
+		}
+
+
 #if TEST_FOV
 		public static void OnScene( SceneView sceneView ) {
 			if( sceneView != null || sceneView.camera != null ) {
@@ -83,6 +106,103 @@ namespace Hananoki.SceneViewTools {
 #endif
 
 		static void TimeSlider() {
+		}
+
+		public static void OnToolLightItensity( Light[] targets ) {
+			Tools.current = Tool.None;
+			var sceneCamera = SceneView.currentDrawingSceneView.camera;
+
+			using( new HandlesGUIScope() ) {
+				foreach( Light p in targets ) {
+					var pos = sceneCamera.WorldToScreenPoint( p.transform.position );
+					var r = new Rect( pos.x, Screen.height - pos.y - 30, 80, 20 );
+
+					EditorGUI.BeginChangeCheck();
+					var _f = EditorGUI.FloatField( r, p.intensity );
+					r.y += 20;
+
+					EditorGUI.DrawRect( r.AlignCenterH( 12 ), new Color( 0.5849056f, 0.5849056f, 0.5849056f, 0.4666667f ) );
+
+					//int controlID = GUIUtility.GetControlID( "HEditorSliderKnob".GetHashCode(), FocusType.Passive, r );
+					//_f = GUI.Slider( r, _f, 0.0f, 0.00f, 5.00f, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb, true, controlID );
+					_f = GUI.HorizontalSlider( r, _f, 0.0f, 5.00f );
+					if( EditorGUI.EndChangeCheck() ) {
+						EditorHelper.Dirty( p, () => {
+							p.intensity = _f;
+						} );
+					}
+				}
+			}
+		}
+
+
+		public static void OnToolLightLookAt( Light[] targets ) {
+			Tools.current = Tool.None;
+
+			void _DirtyPosition( Transform p, Vector3 _pos, Vector3 _lookat ) {
+				EditorHelper.Dirty( p, () => {
+					var n = _lookat - _pos;
+					p.position = _pos;
+					p.rotation = Quaternion.LookRotation( n.normalized );
+				} );
+			}
+
+			foreach( var l in targets ) {
+				var p = l.transform;
+				var data = SceneToolBehaviour.GetEditorToolBehaviour( p );
+				var pos = p.position;
+				var size = HandleUtility.GetHandleSize( pos );
+
+				Handles.CapFunction RectangleHandleCap2D = ( id, _pos, rot, _size, eventType ) => {
+					Handles.RectangleHandleCap( id, _pos, Quaternion.Euler( 0.0f, p.localEulerAngles.y, 0.0f ) * Quaternion.Euler( 90.0f, 0.0f, 0.0f ), 0.25f * size, eventType );
+				};
+				Handles.CapFunction RectangleHandleCapY = ( id, _pos, rot, _size, eventType ) => {
+					Handles.RectangleHandleCap( id, _pos, Quaternion.Euler( 0.0f, p.localEulerAngles.y, 0.0f ) /** qt.Euler( 90.0f, 0.0f, 0.0f )*/, 0.25f * size, eventType );
+				};
+				Handles.CapFunction CircleHandleCap = ( id, _pos, rot, _size, eventType ) => {
+					Handles.CircleHandleCap( id, _pos, Quaternion.Euler( 90.0f, 0.0f, 0.0f ), 0.25f * size, eventType );
+				};
+
+
+				EditorGUI.BeginChangeCheck();
+				Handles.color = Handles.zAxisColor;
+				pos = Handles.Slider( pos, p.forward );
+
+				if( EditorGUI.EndChangeCheck() ) {
+					_DirtyPosition( p, pos, data.lockAt );
+				}
+
+				EditorGUI.BeginChangeCheck();
+				Handles.color = Handles.yAxisColor;
+				var pos2 = Handles.FreeMoveHandle( pos, Quaternion.identity, 1, Vector3.zero, RectangleHandleCapY );
+				if( EditorGUI.EndChangeCheck() ) {
+					pos.y = pos2.y;
+					_DirtyPosition( p, pos, data.lockAt );
+				}
+
+				EditorGUI.BeginChangeCheck();
+				Handles.color = Handles.zAxisColor;
+				pos2 = Handles.FreeMoveHandle( pos, Quaternion.identity, 1, Vector3.zero, RectangleHandleCap2D );
+				if( EditorGUI.EndChangeCheck() ) {
+					pos.x = pos2.x;
+					pos.z = pos2.z;
+					_DirtyPosition( p, pos, data.lockAt );
+				}
+
+
+				EditorGUI.BeginChangeCheck();
+				var vv = Handles.FreeMoveHandle( data.lockAt, Quaternion.identity, 1, Vector3.zero, CircleHandleCap );
+				if( EditorGUI.EndChangeCheck() ) {
+					EditorHelper.Dirty( p, () => {
+						data.lockAt.x = vv.x;
+						data.lockAt.z = vv.z;
+						var n = data.lockAt - p.transform.position;
+						p.transform.position = pos;
+						p.transform.rotation = Quaternion.LookRotation( n.normalized );
+					} );
+				}
+
+			}
 		}
 
 
@@ -102,6 +222,21 @@ namespace Hananoki.SceneViewTools {
 				DrawLeftBottom( sceneView );
 
 				DrawRightBottom( sceneView );
+
+				DrawToolPanel( sceneView );
+			}
+
+			if( E.i.tools ) {
+				if( s_lightTool ) {
+					foreach( var p in s_lights ) {
+						OnToolLightItensity( s_lights.ToArray() );
+					}
+				}
+				if( s_lookAtTool ) {
+					foreach( var p in s_lights ) {
+						OnToolLightLookAt( s_lights.ToArray() );
+					}
+				}
 			}
 
 #if TEST_FOV
@@ -121,26 +256,59 @@ namespace Hananoki.SceneViewTools {
 				}
 			}
 #endif
+
+		}
+
+
+
+		internal static void DrawToolPanel( SceneView sceneView ) {
+			if( !E.i.tools ) return;
+
+			var cont = EditorHelper.TempContent( EditorIcon.viewtoolorbit );
+			//var size = EditorStyles.miniButton.CalcSize( cont, GUILayout.Width(32) );
+			var x = ( Screen.width * 0.5f ) - ( 64 * 0.5f );
+			var y = Screen.height - ( 24 * 2 ) - ( 8 * 2 );
+			Rect r = new Rect( x, y, 32 * 2 + 4, 20 );
+			GUILayout.BeginArea( r );
+			GUILayout.BeginHorizontal();
+			if( 0 < s_lights.Length ) {
+				EditorGUI.BeginChangeCheck();
+				s_lightTool = GUILayout.Toggle( s_lightTool, EditorIcon.icons_processed_directionallight_icon_asset, EditorStyles.miniButton, GUILayout.Width( 32 ) );
+				if( EditorGUI.EndChangeCheck() ) {
+					Tools.current = Tool.None;
+					s_lookAtTool = false;
+				}
+				EditorGUI.BeginChangeCheck();
+				s_lookAtTool = GUILayout.Toggle( s_lookAtTool, EditorIcon.viewtoolorbit, EditorStyles.miniButton, GUILayout.Width( 32 ) );
+				if( EditorGUI.EndChangeCheck() ) {
+					Tools.current = Tool.None;
+					s_lightTool = false;
+				}
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.EndArea();
+
+
 		}
 
 
 		internal static void DrawRightBottom( SceneView sceneView ) {
-			if( E.i.enableTimeScaleSlider ) {
-				Rect rcPop = new Rect( 108, 8, 160, 16 );
-				rcPop.x = Screen.width - 180 - 10;
-				rcPop.width = 180 - 8;
-				rcPop.y = Screen.height - ( 24 * 2 ) - ( 8 * 2 );
+			if( !E.i.enableTimeScaleSlider ) return;
 
-				var rc = rcPop.AddW( 4 );
-				EditorGUI.DrawRect( rc, E.i.uiBkColor );
 
-				//int controlID = GUIUtility.GetControlID( "HEditorSliderKnob".GetHashCode(), FocusType.Passive, rcPop );
-				//Time.timeScale = GUI.Slider( rcPop, Time.timeScale, 0.0f, 0.00f, 1.00f, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb, true, controlID );
-				//EditorGUI.DrawRect( rcPop, new Color(0,0,1,0.50f));
+			Rect rcPop = new Rect( 108, 8, 160, 16 );
+			rcPop.x = Screen.width - 180 - 10;
+			rcPop.width = 180 - 8;
+			rcPop.y = Screen.height - ( 24 * 2 ) - ( 8 * 2 );
 
-				Time.timeScale = EditorGUI.Slider( rcPop, Time.timeScale, 0.00f, 1.00f );
-			}
+			var rc = rcPop.AddW( 4 );
+			EditorGUI.DrawRect( rc, E.i.uiBkColor );
 
+			//int controlID = GUIUtility.GetControlID( "HEditorSliderKnob".GetHashCode(), FocusType.Passive, rcPop );
+			//Time.timeScale = GUI.Slider( rcPop, Time.timeScale, 0.0f, 0.00f, 1.00f, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb, true, controlID );
+			//EditorGUI.DrawRect( rcPop, new Color(0,0,1,0.50f));
+
+			Time.timeScale = EditorGUI.Slider( rcPop, Time.timeScale, 0.00f, 1.00f );
 		}
 
 

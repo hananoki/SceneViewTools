@@ -1,19 +1,15 @@
 {
-    "name": "Hananoki.SceneViewTools.Editor",
+    "name": "Hananoki.SceneViewTools.Runtime",
     "references": [
         "Hananoki.SharedModule.Runtime",
-        "Hananoki.SharedModule.RuntimeEditor",
-        "Hananoki.UnitySymbol.Editor",
-        "Hananoki.SceneViewTools.Runtime"
+        "Hananoki.SharedModule.RuntimeEditor"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

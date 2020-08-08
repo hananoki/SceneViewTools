@@ -23,6 +23,8 @@ namespace Hananoki.SceneViewTools {
 		public Color uiBkColor = new Color( 0, 0, 0, 0.10f );
 		public Color textColor = Color.white;
 
+		public bool tools = false;
+
 
 		public static E i;
 
@@ -60,15 +62,20 @@ namespace Hananoki.SceneViewTools {
 			E.i.Enable = HEditorGUILayout.ToggleLeft( SS._Enable, E.i.Enable );
 			EditorGUI.indentLevel++;
 			GUILayout.Space( 8f );
+			using( new EditorGUI.DisabledGroupScope( !E.i.Enable ) ) {
+				E.i.multiSceneExec = HEditorGUILayout.ToggleLeft( S._Executeevenwithmultiplesceneviews, E.i.multiSceneExec );
 
-			E.i.multiSceneExec = HEditorGUILayout.ToggleLeft( S._Executeevenwithmultiplesceneviews, E.i.multiSceneExec );
+				E.i.enableTimeScaleSlider = HEditorGUILayout.ToggleLeft( S._TimeScaleSlider, E.i.enableTimeScaleSlider );
+				E.i.syncScene2Game = HEditorGUILayout.ToggleLeft( S._Syncscenecameratogamecamera, E.i.syncScene2Game );
+				E.i.toggleOrthographic = HEditorGUILayout.ToggleLeft( S._ToggleOrthographic, E.i.toggleOrthographic );
 
-			E.i.enableTimeScaleSlider = HEditorGUILayout.ToggleLeft( S._TimeScaleSlider, E.i.enableTimeScaleSlider );
-			E.i.syncScene2Game = HEditorGUILayout.ToggleLeft( S._Syncscenecameratogamecamera, E.i.syncScene2Game );
-			E.i.toggleOrthographic = HEditorGUILayout.ToggleLeft( S._ToggleOrthographic, E.i.toggleOrthographic );
+				E.i.uiBkColor = EditorGUILayout.ColorField( SS._BackColor, E.i.uiBkColor );
+				E.i.textColor = EditorGUILayout.ColorField( SS._TextColor, E.i.textColor );
 
-			E.i.uiBkColor = EditorGUILayout.ColorField( SS._BackColor, E.i.uiBkColor );
-			E.i.textColor = EditorGUILayout.ColorField( SS._TextColor, E.i.textColor );
+				GUILayout.Space( 8f );
+				EditorGUILayout.LabelField( $"* {SS._Experimental}", EditorStyles.boldLabel );
+				E.i.tools = HEditorGUILayout.ToggleLeft( "Tool (UNITY_2019_1_OR_NEWER)", E.i.tools );
+			}
 			EditorGUI.indentLevel--;
 			//}
 
@@ -81,12 +88,7 @@ namespace Hananoki.SceneViewTools {
 				ObjectStat.Enable();
 			}
 #endif
-			if( GUILayout.Button( "remove" ) ) {
-				SceneViewUtils.RemoveGUI( SceneViewTools.OnSceneGUI );
-			}
-			if( GUILayout.Button( "remove" ) ) {
-				SceneViewUtils.AddGUI( SceneViewTools.OnSceneGUI );
-			}
+			
 		}
 
 

@@ -1,5 +1,16 @@
 # SceneViewTools
 
+## [1.0.5] - 2020-08-08
+
+### Required
+- SharedModule v1.5.4 or later
+
+### Added
+- EditorTool-like implementation test
+
+### Fixed
+- Delete unnecessary buttons
+
 ## [1.0.4] - 2020-08-02
 
 ### Changed
