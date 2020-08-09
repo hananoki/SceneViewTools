@@ -8,10 +8,19 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using System.Collections.Generic;
+using System;
+#if UNITY_2019_1_OR_NEWER
 using UnityEditor.EditorTools;
+#endif
+using UnityEditor.Callbacks;
+
+#if ENABLE_TILEMAP
+using UnityEngine.Tilemaps;
+#endif
 
 using E = Hananoki.SceneViewTools.SettingsEditor;
 using UnityScene = UnityEngine.SceneManagement.Scene;
+using UnityObject = UnityEngine.Object;
 
 namespace Hananoki.SceneViewTools {
 	[InitializeOnLoad]
@@ -20,16 +29,22 @@ namespace Hananoki.SceneViewTools {
 		internal class Styles {
 			public GUIStyle popup;
 			public GUIStyle toggle;
+			public GUIStyle rightButton;
 			const int WIDTH = 16;
 
 			public Styles() {
 				toggle = new GUIStyle( EditorStyles.toggle );
-				if( UnitySymbol.Has( "UNITY_2019_3_OR_NEWER" ) ) {
+				if( UnitySymbol.UNITY_2019_3_OR_NEWER ) {
 					popup = new GUIStyle( "MiniPopup" );
 				}
 				else {
 					popup = new GUIStyle( "Popup" );
 				}
+
+				rightButton = new GUIStyle( HEditorStyles.iconButton );
+				rightButton.imagePosition = ImagePosition.ImageLeft;
+				rightButton.fixedWidth = 0;
+				rightButton.stretchWidth = true;
 			}
 		}
 
@@ -37,6 +52,7 @@ namespace Hananoki.SceneViewTools {
 		internal static Styles s_styles;
 
 		static Light[] s_lights = new Light[ 0 ];
+		static Animator[] s_animator = new Animator[ 0 ];
 		static bool s_lightTool;
 		static bool s_lookAtTool;
 
@@ -44,8 +60,8 @@ namespace Hananoki.SceneViewTools {
 		static float FOV = -1;
 #endif
 
-#if TEST_TILE
-		static string typeName;
+#if ENABLE_TILEMAP
+		static bool s_tileOn;
 #endif
 
 
@@ -56,38 +72,45 @@ namespace Hananoki.SceneViewTools {
 			EditorSceneManager.sceneOpened += OnSceneOpened;
 
 			Selection.selectionChanged += OnSelectionChanged;
-
+			OnSelectionChanged();
 #if UNITY_2019_1_OR_NEWER
 			EditorTools.activeToolChanged += OnActiveToolChanged;
 #endif
 
-#if TEST_TILE
-			Selection.selectionChanged += () => {
-				if( Selection.activeGameObject == null ) return;
-				if( Selection.activeGameObject.GetComponent<Tilemap>() ) {
-					typeName = "Tilemap";
-				}
-				else {
-					typeName = "";
-				}
-			};
-#endif
 		}
 
 		static void OnSceneOpened( UnityScene scene, OpenSceneMode mode ) {
 			s_lights = new Light[ 0 ];
-			s_lightTool=false;
+			s_lightTool = false;
 			s_lookAtTool = false;
 			s_cameraSelect = 0;
 		}
 
+		[DidReloadScripts]
+		static void OnDidReloadScripts() {
+		}
+
 		static void OnSelectionChanged() {
+			s_tileOn = false;
+			if( !E.i.tools ) return;
+
 			s_lights = Selection.gameObjects.Select( x => x.GetComponent<Light>() ).Where( x => x != null ).ToArray();
+			s_animator = Selection.gameObjects.Select( x => x.GetComponent<Animator>() ).Where( x => x != null ).ToArray();
 			//s_lightTool = false;
+
+			if( Selection.activeGameObject == null ) return;
+			if( Selection.activeGameObject.GetComponent<Tilemap>() ) {
+				s_tileOn = true;
+			}
+			if( Selection.activeGameObject.GetComponent<Grid>() ) {
+				s_tileOn = true;
+			}
 		}
 
 		static void OnActiveToolChanged() {
+#if UNITY_2019_1_OR_NEWER
 			if( "NoneTool" == EditorTools.activeToolType.Name ) return;
+#endif
 
 			s_lightTool = false;
 			s_lookAtTool = false;
@@ -216,6 +239,7 @@ namespace Hananoki.SceneViewTools {
 			if( s_styles == null ) s_styles = new Styles();
 
 			s_styles.toggle.normal.textColor = E.i.textColor;
+			s_styles.rightButton.normal.textColor = E.i.textColor;
 
 			using( new GUISkinScope( EditorSkin.Inspector ) )
 			using( new HandlesGUIScope() ) {
@@ -243,20 +267,6 @@ namespace Hananoki.SceneViewTools {
 				rcPop.y -= 24;
 				FOV = EditorGUI.Slider( rcPop, FOV, 0.01f, 180.00f );
 #endif
-
-#if TEST_TILE
-				if( !string.IsNullOrEmpty( typeName ) ) {
-				if( typeName == "Tilemap" ) {
-					rcPop.y -= 24;
-					rcPop.width = GUI.skin.button.CalcSize( EditorHelper.TempContent( "Tile Palette" ) ).x;
-					rcPop.x = Screen.width - rcPop.width - 8;
-					if( GUI.Button( rcPop, "Tile Palette" ) ) {
-						EditorApplication.ExecuteMenuItem( "Window/2D/Tile Palette" );
-					}
-				}
-			}
-#endif
-
 		}
 
 
@@ -289,6 +299,40 @@ namespace Hananoki.SceneViewTools {
 			GUILayout.EndArea();
 
 
+			HGUIScope.Area( new Rect( Screen.width - 200, 120, 200, Screen.height - 100 ), _area );
+			void _area() {
+				if( s_tileOn ) {
+					ShowWindowButton( UnityTypes.GridPaintPaletteWindow, "Tilemap", EditorIcon.icons_processed_unityengine_tilemaps_tilemap_icon_asset );
+				}
+				if( 0 < s_lights.Length ) {
+					ShowWindowButton( UnityTypes.LightingWindow, "Lighting", EditorIcon.lighting );
+					ShowWindowButton( UnityTypes.LightingExplorerWindow, "Light Explorer", EditorIcon.lighting );
+				}
+				if( 0 < s_animator.Length ) {
+					ShowWindowButton( UnityTypes.AnimatorControllerTool, "Animator", EditorIcon.unityeditor_graphs_animatorcontrollertool );
+					ShowWindowButton( UnityTypes.AnimationWindow, "Animation", EditorIcon.unityeditor_animationwindow );
+				}
+				
+			}
+		}
+
+
+		internal static void ShowWindowButton( Type type, string text, Texture2D image ) {
+			if( type == null ) return;
+			var _window = HEditorWindow.Find( type );
+			if( _window != null ) return;
+
+			HGUIScope.Horizontal( _ );
+			void _() {
+				GUILayout.FlexibleSpace();
+				var contt = EditorHelper.TempContent( text, image );
+				var aa = EditorStyles.label.CalcSize( text.content() );
+				var rr = GUILayoutUtility.GetRect( contt, s_styles.rightButton, GUILayout.Width( aa.x + 16+4 ) );
+				EditorGUI.DrawRect( rr, E.i.uiBkColor );
+				if( GUI.Button( rr, contt, s_styles.rightButton ) ) {
+					HEditorWindow.ShowWindow( type );
+				}
+			}
 		}
 
 
@@ -319,7 +363,7 @@ namespace Hananoki.SceneViewTools {
 			Rect rcRad = new Rect( 12, 0, 160 - 4, 16 );
 			Rect rcToggle = new Rect( rcPop.max.x, 0, 16, 16 );
 
-			var cameras = Object.FindObjectsOfType<Camera>();
+			var cameras = UnityObject.FindObjectsOfType<Camera>();
 			rcPop.y = Screen.height - ( 24 * 2 ) - ( 8 * 2 );
 
 			if( E.i.syncScene2Game ) {

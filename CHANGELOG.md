@@ -1,5 +1,13 @@
 # SceneViewTools
 
+## [1.0.6] - 2020-08-09
+
+### Required
+- SharedModule v1.5.5 or later
+
+### Added
+- Added window shortcut function
+
 ## [1.0.5] - 2020-08-08
 
 ### Required
