@@ -13,6 +13,7 @@ using System;
 using UnityEditor.EditorTools;
 #endif
 using UnityEditor.Callbacks;
+using Hananoki.Reflection;
 
 #if ENABLE_TILEMAP
 using UnityEngine.Tilemaps;
@@ -104,6 +105,17 @@ namespace Hananoki.SceneViewTools {
 			}
 			if( Selection.activeGameObject.GetComponent<Grid>() ) {
 				s_tileOn = true;
+			}
+			if( Selection.activeGameObject.GetComponent<TilemapPallet>() ) {
+				var comp = Selection.activeGameObject.GetComponent<TilemapPallet>();
+				var window = HEditorWindow.Find( UnityTypes.GridPaintPaletteWindow );
+
+				var t = R.Type( "UnityEditor.Tilemaps.GridPalettes", "Unity.2D.Tilemap.Editor" );
+				var aa = t.GetProperty<List<GameObject>>( "palettes" );
+				var index = aa.FindIndex( x => x.name == comp.palletSettings.name );
+				if( 0 <= index ) {
+					window.MethodInvoke( "SelectPalette", new object[] { index, comp.gameObject } );
+				}
 			}
 		}
 
@@ -302,7 +314,7 @@ namespace Hananoki.SceneViewTools {
 			HGUIScope.Area( new Rect( Screen.width - 200, 120, 200, Screen.height - 100 ), _area );
 			void _area() {
 				if( s_tileOn ) {
-					ShowWindowButton( UnityTypes.GridPaintPaletteWindow, "Tilemap", EditorIcon.icons_processed_unityengine_tilemaps_tilemap_icon_asset );
+					ShowWindowButton( UnityTypes.GridPaintPaletteWindow, "Tile Pallete", EditorIcon.icons_processed_unityengine_tilemaps_tilemap_icon_asset );
 				}
 				if( 0 < s_lights.Length ) {
 					ShowWindowButton( UnityTypes.LightingWindow, "Lighting", EditorIcon.lighting );
@@ -312,7 +324,7 @@ namespace Hananoki.SceneViewTools {
 					ShowWindowButton( UnityTypes.AnimatorControllerTool, "Animator", EditorIcon.unityeditor_graphs_animatorcontrollertool );
 					ShowWindowButton( UnityTypes.AnimationWindow, "Animation", EditorIcon.unityeditor_animationwindow );
 				}
-				
+
 			}
 		}
 
@@ -327,10 +339,11 @@ namespace Hananoki.SceneViewTools {
 				GUILayout.FlexibleSpace();
 				var contt = EditorHelper.TempContent( text, image );
 				var aa = EditorStyles.label.CalcSize( text.content() );
-				var rr = GUILayoutUtility.GetRect( contt, s_styles.rightButton, GUILayout.Width( aa.x + 16+4 ) );
+				var rr = GUILayoutUtility.GetRect( contt, s_styles.rightButton, GUILayout.Width( aa.x + 16 + 4 ) );
 				EditorGUI.DrawRect( rr, E.i.uiBkColor );
 				if( GUI.Button( rr, contt, s_styles.rightButton ) ) {
-					HEditorWindow.ShowWindow( type );
+					var window = HEditorWindow.ShowWindow( type );
+					window.titleContent = new GUIContent( text, window.titleContent.image );
 				}
 			}
 		}

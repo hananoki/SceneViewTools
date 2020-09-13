@@ -1,5 +1,10 @@
 # SceneViewTools
 
+## [1.0.7] - 2020-09-13
+
+### Added
+- Added tile palette switching function
+
 ## [1.0.6] - 2020-08-09
 
 ### Required

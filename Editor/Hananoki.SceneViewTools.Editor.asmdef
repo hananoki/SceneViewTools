@@ -4,7 +4,8 @@
         "Hananoki.SharedModule.Runtime",
         "Hananoki.SharedModule.RuntimeEditor",
         "Hananoki.UnitySymbol.Editor",
-        "Hananoki.SceneViewTools.Runtime"
+        "Hananoki.SceneViewTools.Runtime",
+        "Hananoki.ReflectionUtils.Editor"
     ],
     "includePlatforms": [
         "Editor"
