@@ -12,7 +12,7 @@ using UnityEditor;
 
 #if ENABLE_TILEMAP
 using UnityEngine.Tilemaps;
-#endif
+
 
 using UnityObject = UnityEngine.Object;
 
@@ -76,3 +76,5 @@ public class TilemapPalletInspector : Editor {
 #endif
 	}
 }
+
+#endif

@@ -92,7 +92,9 @@ namespace Hananoki.SceneViewTools {
 		}
 
 		static void OnSelectionChanged() {
+#if ENABLE_TILEMAP
 			s_tileOn = false;
+#endif
 			if( !E.i.tools ) return;
 
 			s_lights = Selection.gameObjects.Select( x => x.GetComponent<Light>() ).Where( x => x != null ).ToArray();
@@ -100,6 +102,7 @@ namespace Hananoki.SceneViewTools {
 			//s_lightTool = false;
 
 			if( Selection.activeGameObject == null ) return;
+#if ENABLE_TILEMAP
 			if( Selection.activeGameObject.GetComponent<Tilemap>() ) {
 				s_tileOn = true;
 			}
@@ -117,6 +120,8 @@ namespace Hananoki.SceneViewTools {
 					window.MethodInvoke( "SelectPalette", new object[] { index, comp.gameObject } );
 				}
 			}
+#endif
+
 		}
 
 		static void OnActiveToolChanged() {
@@ -313,9 +318,11 @@ namespace Hananoki.SceneViewTools {
 
 			HGUIScope.Area( new Rect( Screen.width - 200, 120, 200, Screen.height - 100 ), _area );
 			void _area() {
+#if ENABLE_TILEMAP
 				if( s_tileOn ) {
 					ShowWindowButton( UnityTypes.GridPaintPaletteWindow, "Tile Pallete", EditorIcon.icons_processed_unityengine_tilemaps_tilemap_icon_asset );
 				}
+#endif
 				if( 0 < s_lights.Length ) {
 					ShowWindowButton( UnityTypes.LightingWindow, "Lighting", EditorIcon.lighting );
 					ShowWindowButton( UnityTypes.LightingExplorerWindow, "Light Explorer", EditorIcon.lighting );

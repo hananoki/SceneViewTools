@@ -1,5 +1,10 @@
 # SceneViewTools
 
+## [1.0.8] - 2020-11-15
+
+### Fixed
+- Fix ENABLE_TILEMAP
+
 ## [1.0.7] - 2020-09-13
 
 ### Added
