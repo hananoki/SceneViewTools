@@ -20,7 +20,7 @@
 ```
 
 ## Requirement
-![](https://img.shields.io/badge/SharedModule-v1.5.5%20or%20later-blue.svg)
+[![](https://img.shields.io/badge/SharedModule-v1.7.0%20or%20later-blue.svg)](https://github.com/hananoki/SharedModule)
 
 ## Licence
 [MIT](https://github.com/hananoki/SceneViewTools/blob/master/LICENSE.md)

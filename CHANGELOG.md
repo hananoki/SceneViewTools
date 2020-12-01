@@ -1,5 +1,8 @@
 # SceneViewTools
 
+## [1.0.9] - 2020-12-02
+- SharedModule v1.7.0 or later
+
 ## [1.0.8] - 2020-11-15
 
 ### Fixed

@@ -27,7 +27,7 @@ public class TilemapPalletInspector : Editor {
 #endif
 
 	void OnEnable() {
-		m_gridPalettes = R.Type( "UnityEditor.Tilemaps.GridPalettes", "Unity.2D.Tilemap.Editor" );
+		m_gridPalettes = UnityTypes.UnityEditor_Tilemaps_GridPalettes;
 	}
 
 	//void OnDisable() {
@@ -51,7 +51,7 @@ public class TilemapPalletInspector : Editor {
 		}
 
 #if ENABLE_TILEMAP
-		var window = HEditorWindow.Find( UnityTypes.GridPaintPaletteWindow );
+		var window = HEditorWindow.Find( UnityTypes.UnityEditor_Tilemaps_GridPaintPaletteWindow );
 		if( window == null ) return;
 		var clipboardView = window.GetProperty<object>( "clipboardView" );
 		var _tileBase = clipboardView.GetProperty<TileBase>( "activeTile" );
@@ -60,18 +60,16 @@ public class TilemapPalletInspector : Editor {
 			m_tileBaseEditor = Editor.CreateEditor( m_tileBase );
 		}
 		if( m_tileBaseEditor != null ) {
-			HGUIScope.Vertical( EditorStyles.helpBox, _ );
-			void _() {
-				HGUIScope.Horizontal( _h );
-				void _h() {
-					EditorGUILayout.LabelField( "Active Tile", EditorStyles.boldLabel );
-					GUILayout.FlexibleSpace();
-					if( GUILayout.Button( "Delete" ) ) {
-						UnityObject.DestroyImmediate( _tileBase, true );
-					}
-				}
-				m_tileBaseEditor.OnInspectorGUI();
+			HGUIScope.Vertical( EditorStyles.helpBox );
+			HGUIScope.Horizontal();
+			EditorGUILayout.LabelField( "Active Tile", EditorStyles.boldLabel );
+			GUILayout.FlexibleSpace();
+			if( GUILayout.Button( "Delete" ) ) {
+				UnityObject.DestroyImmediate( _tileBase, true );
 			}
+			HGUIScope.End();
+			m_tileBaseEditor.OnInspectorGUI();
+			HGUIScope.End();
 		}
 #endif
 	}

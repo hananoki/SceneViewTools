@@ -111,9 +111,9 @@ namespace Hananoki.SceneViewTools {
 			}
 			if( Selection.activeGameObject.GetComponent<TilemapPallet>() ) {
 				var comp = Selection.activeGameObject.GetComponent<TilemapPallet>();
-				var window = HEditorWindow.Find( UnityTypes.GridPaintPaletteWindow );
+				var window = HEditorWindow.Find( UnityTypes.UnityEditor_Tilemaps_GridPaintPaletteWindow );
 
-				var t = R.Type( "UnityEditor.Tilemaps.GridPalettes", "Unity.2D.Tilemap.Editor" );
+				var t = UnityTypes.UnityEditor_Tilemaps_GridPalettes;
 				var aa = t.GetProperty<List<GameObject>>( "palettes" );
 				var index = aa.FindIndex( x => x.name == comp.palletSettings.name );
 				if( 0 <= index ) {
@@ -316,23 +316,23 @@ namespace Hananoki.SceneViewTools {
 			GUILayout.EndArea();
 
 
-			HGUIScope.Area( new Rect( Screen.width - 200, 120, 200, Screen.height - 100 ), _area );
-			void _area() {
+			GUILayout.BeginArea( new Rect( Screen.width - 200, 120, 200, Screen.height - 100 ) );
+			{
 #if ENABLE_TILEMAP
 				if( s_tileOn ) {
-					ShowWindowButton( UnityTypes.GridPaintPaletteWindow, "Tile Pallete", EditorIcon.icons_processed_unityengine_tilemaps_tilemap_icon_asset );
+					ShowWindowButton( UnityTypes.UnityEditor_Tilemaps_GridPaintPaletteWindow, "Tile Pallete", EditorIcon.icons_processed_unityengine_tilemaps_tilemap_icon_asset );
 				}
 #endif
 				if( 0 < s_lights.Length ) {
-					ShowWindowButton( UnityTypes.LightingWindow, "Lighting", EditorIcon.lighting );
-					ShowWindowButton( UnityTypes.LightingExplorerWindow, "Light Explorer", EditorIcon.lighting );
+					ShowWindowButton( UnityTypes.UnityEditor_LightingWindow, "Lighting", EditorIcon.lighting );
+					ShowWindowButton( UnityTypes.UnityEditor_LightingExplorerWindow, "Light Explorer", EditorIcon.lighting );
 				}
 				if( 0 < s_animator.Length ) {
-					ShowWindowButton( UnityTypes.AnimatorControllerTool, "Animator", EditorIcon.unityeditor_graphs_animatorcontrollertool );
-					ShowWindowButton( UnityTypes.AnimationWindow, "Animation", EditorIcon.unityeditor_animationwindow );
+					ShowWindowButton( UnityTypes.UnityEditor_Graphs_AnimatorControllerTool, "Animator", EditorIcon.unityeditor_graphs_animatorcontrollertool );
+					ShowWindowButton( UnityTypes.UnityEditor_AnimationWindow, "Animation", EditorIcon.unityeditor_animationwindow );
 				}
-
 			}
+			GUILayout.EndArea();
 		}
 
 
@@ -341,18 +341,17 @@ namespace Hananoki.SceneViewTools {
 			var _window = HEditorWindow.Find( type );
 			if( _window != null ) return;
 
-			HGUIScope.Horizontal( _ );
-			void _() {
-				GUILayout.FlexibleSpace();
-				var contt = EditorHelper.TempContent( text, image );
-				var aa = EditorStyles.label.CalcSize( text.content() );
-				var rr = GUILayoutUtility.GetRect( contt, s_styles.rightButton, GUILayout.Width( aa.x + 16 + 4 ) );
-				EditorGUI.DrawRect( rr, E.i.uiBkColor );
-				if( GUI.Button( rr, contt, s_styles.rightButton ) ) {
-					var window = HEditorWindow.ShowWindow( type );
-					window.titleContent = new GUIContent( text, window.titleContent.image );
-				}
+			HGUIScope.Horizontal();
+			GUILayout.FlexibleSpace();
+			var contt = EditorHelper.TempContent( text, image );
+			var aa = EditorStyles.label.CalcSize( text.content() );
+			var rr = GUILayoutUtility.GetRect( contt, s_styles.rightButton, GUILayout.Width( aa.x + 16 + 4 ) );
+			EditorGUI.DrawRect( rr, E.i.uiBkColor );
+			if( GUI.Button( rr, contt, s_styles.rightButton ) ) {
+				var window = HEditorWindow.ShowWindow( type );
+				window.titleContent = new GUIContent( text, window.titleContent.image );
 			}
+			HGUIScope.End();
 		}
 
 
