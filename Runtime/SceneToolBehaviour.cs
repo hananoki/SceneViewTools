@@ -6,9 +6,10 @@ using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using HananokiEditor;
 #endif
 
-namespace Hananoki {
+namespace HananokiRuntime {
 	public class SceneToolBehaviour : MonoBehaviour {
 #if UNITY_EDITOR
 		[System.Serializable]

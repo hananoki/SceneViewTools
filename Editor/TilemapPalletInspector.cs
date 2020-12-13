@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿
+using System;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Serialization;
-using Hananoki;
-using Hananoki.Reflection;
-using Hananoki.Extensions;
+using HananokiEditor;
+using HananokiRuntime;
 
 using UnityEditor;
 
@@ -60,16 +56,16 @@ public class TilemapPalletInspector : Editor {
 			m_tileBaseEditor = Editor.CreateEditor( m_tileBase );
 		}
 		if( m_tileBaseEditor != null ) {
-			HGUIScope.Vertical( EditorStyles.helpBox );
-			HGUIScope.Horizontal();
+			ScopeVertical.Begin( EditorStyles.helpBox );
+			ScopeHorizontal.Begin();
 			EditorGUILayout.LabelField( "Active Tile", EditorStyles.boldLabel );
 			GUILayout.FlexibleSpace();
 			if( GUILayout.Button( "Delete" ) ) {
 				UnityObject.DestroyImmediate( _tileBase, true );
 			}
-			HGUIScope.End();
+			ScopeHorizontal.End();
 			m_tileBaseEditor.OnInspectorGUI();
-			HGUIScope.End();
+			ScopeVertical.End();
 		}
 #endif
 	}

@@ -1,10 +1,11 @@
 ﻿
 using UnityEngine;
 
-public class TilemapPallet : MonoBehaviour {
+namespace HananokiRuntime {
+	public class TilemapPallet : MonoBehaviour {
 #if UNITY_EDITOR
-	public GameObject palletSettings;
+		public GameObject palletSettings;
 #endif
+	}
 }
-
 

@@ -1,13 +1,14 @@
-﻿
-using Hananoki.Extensions;
-using Hananoki.SharedModule;
+﻿#define ENABLE_HANANOKI_SETTINGS
+
+using HananokiEditor.Extensions;
+using HananokiEditor.SharedModule;
 using UnityEditor;
 using UnityEngine;
 
-using E = Hananoki.SceneViewTools.SettingsEditor;
-using SS = Hananoki.SharedModule.S;
+using E = HananokiEditor.SceneViewTools.SettingsEditor;
+using SS = HananokiEditor.SharedModule.S;
 
-namespace Hananoki.SceneViewTools {
+namespace HananokiEditor.SceneViewTools {
 
 	[System.Serializable]
 	public class SettingsEditor {
@@ -118,13 +119,12 @@ namespace Hananoki.SceneViewTools {
 
 
 #if ENABLE_HANANOKI_SETTINGS
-	[SettingsClass]
 	public class SettingsEvent {
-		[SettingsMethod]
+		[HananokiSettingsRegister]
 		public static SettingsItem RegisterSettings() {
 			return new SettingsItem() {
 				//mode = 1,
-				displayName = Package.name,
+				displayName = Package.nameNicify,
 				version = Package.version,
 				gui = SettingsEditorWindow.DrawGUI,
 			};

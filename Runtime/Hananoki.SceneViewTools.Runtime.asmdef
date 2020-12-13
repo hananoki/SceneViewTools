@@ -1,16 +1,17 @@
 {
-    "name": "Hananoki.SceneViewTools.Runtime",
-    "references": [
-        "Hananoki.SharedModule.Runtime",
-        "Hananoki.SharedModule.RuntimeEditor"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "Hananoki.SceneViewTools.Runtime",
+  "references": [
+    "Hananoki.SharedModule.Runtime",
+    "Hananoki.SharedModule.RuntimeEditor"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "references.backup": []
 }

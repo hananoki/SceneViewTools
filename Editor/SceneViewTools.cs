@@ -1,7 +1,7 @@
 ﻿//#define TEST_FOV
 //#define TEST_TILE
 
-using Hananoki.Extensions;
+using HananokiEditor.Extensions;
 
 using System.Linq;
 using UnityEditor;
@@ -9,21 +9,22 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using HananokiRuntime;
+
 #if UNITY_2019_1_OR_NEWER
 using UnityEditor.EditorTools;
 #endif
 using UnityEditor.Callbacks;
-using Hananoki.Reflection;
 
 #if ENABLE_TILEMAP
 using UnityEngine.Tilemaps;
 #endif
 
-using E = Hananoki.SceneViewTools.SettingsEditor;
+using E = HananokiEditor.SceneViewTools.SettingsEditor;
 using UnityScene = UnityEngine.SceneManagement.Scene;
 using UnityObject = UnityEngine.Object;
 
-namespace Hananoki.SceneViewTools {
+namespace HananokiEditor.SceneViewTools {
 	[InitializeOnLoad]
 	internal partial class SceneViewTools {
 
@@ -341,7 +342,7 @@ namespace Hananoki.SceneViewTools {
 			var _window = HEditorWindow.Find( type );
 			if( _window != null ) return;
 
-			HGUIScope.Horizontal();
+			ScopeHorizontal.Begin();
 			GUILayout.FlexibleSpace();
 			var contt = EditorHelper.TempContent( text, image );
 			var aa = EditorStyles.label.CalcSize( text.content() );
@@ -351,7 +352,7 @@ namespace Hananoki.SceneViewTools {
 				var window = HEditorWindow.ShowWindow( type );
 				window.titleContent = new GUIContent( text, window.titleContent.image );
 			}
-			HGUIScope.End();
+			ScopeHorizontal.End();
 		}
 
 
