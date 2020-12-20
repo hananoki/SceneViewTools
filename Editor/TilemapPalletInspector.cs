@@ -47,7 +47,7 @@ public class TilemapPalletInspector : Editor {
 		}
 
 #if ENABLE_TILEMAP
-		var window = HEditorWindow.Find( UnityTypes.UnityEditor_Tilemaps_GridPaintPaletteWindow );
+		var window = EditorWindowUtils.Find( UnityTypes.UnityEditor_Tilemaps_GridPaintPaletteWindow );
 		if( window == null ) return;
 		var clipboardView = window.GetProperty<object>( "clipboardView" );
 		var _tileBase = clipboardView.GetProperty<TileBase>( "activeTile" );

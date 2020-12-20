@@ -112,7 +112,7 @@ namespace HananokiEditor.SceneViewTools {
 			}
 			if( Selection.activeGameObject.GetComponent<TilemapPallet>() ) {
 				var comp = Selection.activeGameObject.GetComponent<TilemapPallet>();
-				var window = HEditorWindow.Find( UnityTypes.UnityEditor_Tilemaps_GridPaintPaletteWindow );
+				var window = EditorWindowUtils.Find( UnityTypes.UnityEditor_Tilemaps_GridPaintPaletteWindow );
 
 				var t = UnityTypes.UnityEditor_Tilemaps_GridPalettes;
 				var aa = t.GetProperty<List<GameObject>>( "palettes" );
@@ -339,7 +339,7 @@ namespace HananokiEditor.SceneViewTools {
 
 		internal static void ShowWindowButton( Type type, string text, Texture2D image ) {
 			if( type == null ) return;
-			var _window = HEditorWindow.Find( type );
+			var _window = EditorWindowUtils.Find( type );
 			if( _window != null ) return;
 
 			ScopeHorizontal.Begin();
