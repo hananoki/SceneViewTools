@@ -24,6 +24,12 @@ using E = HananokiEditor.SceneViewTools.SettingsEditor;
 using UnityScene = UnityEngine.SceneManagement.Scene;
 using UnityObject = UnityEngine.Object;
 
+#if UNITY_2020_2_OR_NEWER
+using ToolManager = UnityEditor.EditorTools.ToolManager;
+#elif UNITY_2019_1_OR_NEWER
+using ToolManager = UnityEditor.EditorTools.EditorTools;
+#endif
+
 namespace HananokiEditor.SceneViewTools {
 	[InitializeOnLoad]
 	internal partial class SceneViewTools {
@@ -76,7 +82,7 @@ namespace HananokiEditor.SceneViewTools {
 			Selection.selectionChanged += OnSelectionChanged;
 			OnSelectionChanged();
 #if UNITY_2019_1_OR_NEWER
-			EditorTools.activeToolChanged += OnActiveToolChanged;
+			ToolManager.activeToolChanged += OnActiveToolChanged;
 #endif
 
 		}
@@ -127,7 +133,7 @@ namespace HananokiEditor.SceneViewTools {
 
 		static void OnActiveToolChanged() {
 #if UNITY_2019_1_OR_NEWER
-			if( "NoneTool" == EditorTools.activeToolType.Name ) return;
+			if( "NoneTool" == ToolManager.activeToolType.Name ) return;
 #endif
 
 			s_lightTool = false;

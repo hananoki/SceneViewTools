@@ -1,5 +1,10 @@
 # Scene View Tools
 
+## [1.0.12] - 2021-02-07
+
+### Added
+- Added support for Unity 2020.2
+
 ## [1.0.11] - 2020-12-21
 - SharedModule v1.7.4 or later
 
