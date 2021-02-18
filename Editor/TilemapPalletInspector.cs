@@ -42,7 +42,7 @@ public class TilemapPalletInspector : Editor {
 			EditorGUI.BeginChangeCheck();
 			var a = EditorGUILayout.Slider( "Alpha", tilemap.color.a, 0.00f, 1.00f );
 			if( EditorGUI.EndChangeCheck() ) {
-				tilemap.color = ColorUtils.Alpha( tilemap.color, a );
+				tilemap.color = ColorUtils.RGBA( tilemap.color, a );
 			}
 		}
 

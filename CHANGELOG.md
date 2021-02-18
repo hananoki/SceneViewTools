@@ -1,5 +1,11 @@
 # Scene View Tools
 
+## [1.0.13] - 2021-02-19
+- SharedModule v1.7.6 or later
+
+### Added
+- Add language file
+
 ## [1.0.12] - 2021-02-07
 
 ### Added
