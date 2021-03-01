@@ -1,5 +1,16 @@
 # Scene View Tools
 
+## [1.1.0] - 2021-03-01
+- SharedModule v1.7.7 or later
+
+### Added
+- BoxCollider tool added.
+- Light burning is now possible with the side button.
+- ReflectionProbe burning is now possible with the side button.
+
+### Changed
+- Tool functions are designed to be customizable.
+
 ## [1.0.13] - 2021-02-19
 - SharedModule v1.7.6 or later
 

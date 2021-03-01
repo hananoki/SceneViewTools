@@ -2,14 +2,15 @@
 //#define TEST_TILE
 
 using HananokiEditor.Extensions;
-
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 using System;
 using HananokiRuntime;
+using HananokiRuntime.Extensions;
 
 #if UNITY_2019_1_OR_NEWER
 using UnityEditor.EditorTools;
@@ -31,38 +32,17 @@ using ToolManager = UnityEditor.EditorTools.EditorTools;
 #endif
 
 namespace HananokiEditor.SceneViewTools {
+	abstract class SceneViewComponentTool {
+		public abstract void OnGUI();
+		public abstract void OnSceneView( IEnumerable<Component> conponents );
+	}
+
 	[InitializeOnLoad]
 	internal partial class SceneViewTools {
 
-		internal class Styles {
-			public GUIStyle popup;
-			public GUIStyle toggle;
-			public GUIStyle rightButton;
-			const int WIDTH = 16;
+		internal static Hashtable m_shortCuts;
+		internal static Hashtable m_componetTool;
 
-			public Styles() {
-				toggle = new GUIStyle( EditorStyles.toggle );
-				if( UnitySymbol.UNITY_2019_3_OR_NEWER ) {
-					popup = new GUIStyle( "MiniPopup" );
-				}
-				else {
-					popup = new GUIStyle( "Popup" );
-				}
-
-				rightButton = new GUIStyle( HEditorStyles.iconButton );
-				rightButton.imagePosition = ImagePosition.ImageLeft;
-				rightButton.fixedWidth = 0;
-				rightButton.stretchWidth = true;
-			}
-		}
-
-
-		internal static Styles s_styles;
-
-		static Light[] s_lights = new Light[ 0 ];
-		static Animator[] s_animator = new Animator[ 0 ];
-		static bool s_lightTool;
-		static bool s_lookAtTool;
 
 #if TEST_FOV
 		static float FOV = -1;
@@ -84,29 +64,53 @@ namespace HananokiEditor.SceneViewTools {
 #if UNITY_2019_1_OR_NEWER
 			ToolManager.activeToolChanged += OnActiveToolChanged;
 #endif
+			m_shortCuts = new Hashtable();
+			m_componetTool = new Hashtable();
+
+			foreach( var minfo in AssemblieUtils.GetAllMethodsWithAttribute<Hananoki_SceneView_ComponentButton>() ) {
+				foreach( var cus in minfo.GetCustomAttributes( true ) ) {
+					if( typeof( Hananoki_SceneView_ComponentButton ) != cus.GetType() ) continue;
+					var atb = (Hananoki_SceneView_ComponentButton) cus;
+
+					m_shortCuts.Add( atb.type, (Action) Delegate.CreateDelegate( typeof( Action ), null, minfo ) );
+					break;
+				}
+			}
+			foreach( var type in AssemblieUtils.GetAllTypesWithAttribute<Hananoki_SceneView_ComponentTool>() ) {
+				foreach( var cAtb in type.GetCustomAttributes( true ) ) {
+					if( typeof( Hananoki_SceneView_ComponentTool ) != cAtb.GetType() ) continue;
+					var atb = (Hananoki_SceneView_ComponentTool) cAtb;
+
+					m_componetTool.Add( atb.type, (SceneViewComponentTool) Activator.CreateInstance( type ) );
+					break;
+				}
+			}
 
 		}
+
+
+
+
 
 		static void OnSceneOpened( UnityScene scene, OpenSceneMode mode ) {
-			s_lights = new Light[ 0 ];
-			s_lightTool = false;
-			s_lookAtTool = false;
 			s_cameraSelect = 0;
 		}
+
+
 
 		[DidReloadScripts]
 		static void OnDidReloadScripts() {
 		}
 
+
+
 		static void OnSelectionChanged() {
+
 #if ENABLE_TILEMAP
 			s_tileOn = false;
 #endif
 			if( !E.i.tools ) return;
 
-			s_lights = Selection.gameObjects.Select( x => x.GetComponent<Light>() ).Where( x => x != null ).ToArray();
-			s_animator = Selection.gameObjects.Select( x => x.GetComponent<Animator>() ).Where( x => x != null ).ToArray();
-			//s_lightTool = false;
 
 			if( Selection.activeGameObject == null ) return;
 #if ENABLE_TILEMAP
@@ -131,13 +135,13 @@ namespace HananokiEditor.SceneViewTools {
 
 		}
 
+
+
 		static void OnActiveToolChanged() {
 #if UNITY_2019_1_OR_NEWER
 			if( "NoneTool" == ToolManager.activeToolType.Name ) return;
 #endif
 
-			s_lightTool = false;
-			s_lookAtTool = false;
 		}
 
 
@@ -152,105 +156,6 @@ namespace HananokiEditor.SceneViewTools {
 		}
 #endif
 
-		static void TimeSlider() {
-		}
-
-		public static void OnToolLightItensity( Light[] targets ) {
-			Tools.current = Tool.None;
-			var sceneCamera = SceneView.currentDrawingSceneView.camera;
-
-			using( new HandlesGUIScope() ) {
-				foreach( Light p in targets ) {
-					var pos = sceneCamera.WorldToScreenPoint( p.transform.position );
-					var r = new Rect( pos.x, Screen.height - pos.y - 30, 80, 20 );
-
-					EditorGUI.BeginChangeCheck();
-					var _f = EditorGUI.FloatField( r, p.intensity );
-					r.y += 20;
-
-					EditorGUI.DrawRect( r.AlignCenterH( 12 ), new Color( 0.5849056f, 0.5849056f, 0.5849056f, 0.4666667f ) );
-
-					//int controlID = GUIUtility.GetControlID( "HEditorSliderKnob".GetHashCode(), FocusType.Passive, r );
-					//_f = GUI.Slider( r, _f, 0.0f, 0.00f, 5.00f, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb, true, controlID );
-					_f = GUI.HorizontalSlider( r, _f, 0.0f, 5.00f );
-					if( EditorGUI.EndChangeCheck() ) {
-						EditorHelper.Dirty( p, () => {
-							p.intensity = _f;
-						} );
-					}
-				}
-			}
-		}
-
-
-		public static void OnToolLightLookAt( Light[] targets ) {
-			Tools.current = Tool.None;
-
-			void _DirtyPosition( Transform p, Vector3 _pos, Vector3 _lookat ) {
-				EditorHelper.Dirty( p, () => {
-					var n = _lookat - _pos;
-					p.position = _pos;
-					p.rotation = Quaternion.LookRotation( n.normalized );
-				} );
-			}
-
-			foreach( var l in targets ) {
-				var p = l.transform;
-				var data = SceneToolBehaviour.GetEditorToolBehaviour( p );
-				var pos = p.position;
-				var size = HandleUtility.GetHandleSize( pos );
-
-				Handles.CapFunction RectangleHandleCap2D = ( id, _pos, rot, _size, eventType ) => {
-					Handles.RectangleHandleCap( id, _pos, Quaternion.Euler( 0.0f, p.localEulerAngles.y, 0.0f ) * Quaternion.Euler( 90.0f, 0.0f, 0.0f ), 0.25f * size, eventType );
-				};
-				Handles.CapFunction RectangleHandleCapY = ( id, _pos, rot, _size, eventType ) => {
-					Handles.RectangleHandleCap( id, _pos, Quaternion.Euler( 0.0f, p.localEulerAngles.y, 0.0f ) /** qt.Euler( 90.0f, 0.0f, 0.0f )*/, 0.25f * size, eventType );
-				};
-				Handles.CapFunction CircleHandleCap = ( id, _pos, rot, _size, eventType ) => {
-					Handles.CircleHandleCap( id, _pos, Quaternion.Euler( 90.0f, 0.0f, 0.0f ), 0.25f * size, eventType );
-				};
-
-
-				EditorGUI.BeginChangeCheck();
-				Handles.color = Handles.zAxisColor;
-				pos = Handles.Slider( pos, p.forward );
-
-				if( EditorGUI.EndChangeCheck() ) {
-					_DirtyPosition( p, pos, data.lockAt );
-				}
-
-				EditorGUI.BeginChangeCheck();
-				Handles.color = Handles.yAxisColor;
-				var pos2 = Handles.FreeMoveHandle( pos, Quaternion.identity, 1, Vector3.zero, RectangleHandleCapY );
-				if( EditorGUI.EndChangeCheck() ) {
-					pos.y = pos2.y;
-					_DirtyPosition( p, pos, data.lockAt );
-				}
-
-				EditorGUI.BeginChangeCheck();
-				Handles.color = Handles.zAxisColor;
-				pos2 = Handles.FreeMoveHandle( pos, Quaternion.identity, 1, Vector3.zero, RectangleHandleCap2D );
-				if( EditorGUI.EndChangeCheck() ) {
-					pos.x = pos2.x;
-					pos.z = pos2.z;
-					_DirtyPosition( p, pos, data.lockAt );
-				}
-
-
-				EditorGUI.BeginChangeCheck();
-				var vv = Handles.FreeMoveHandle( data.lockAt, Quaternion.identity, 1, Vector3.zero, CircleHandleCap );
-				if( EditorGUI.EndChangeCheck() ) {
-					EditorHelper.Dirty( p, () => {
-						data.lockAt.x = vv.x;
-						data.lockAt.z = vv.z;
-						var n = data.lockAt - p.transform.position;
-						p.transform.position = pos;
-						p.transform.rotation = Quaternion.LookRotation( n.normalized );
-					} );
-				}
-
-			}
-		}
 
 
 		public static void OnSceneGUI( SceneView sceneView ) {
@@ -260,10 +165,10 @@ namespace HananokiEditor.SceneViewTools {
 				if( SceneViewUtils.sceneViewNum != 1 ) return;
 			}
 
-			if( s_styles == null ) s_styles = new Styles();
+			Styles.Init();
 
-			s_styles.toggle.normal.textColor = E.i.textColor;
-			s_styles.rightButton.normal.textColor = E.i.textColor;
+			Styles.toggle.normal.textColor = E.i.textColor;
+			Styles.rightButton.normal.textColor = E.i.textColor;
 
 			using( new GUISkinScope( EditorSkin.Inspector ) )
 			using( new HandlesGUIScope() ) {
@@ -275,16 +180,7 @@ namespace HananokiEditor.SceneViewTools {
 			}
 
 			if( E.i.tools ) {
-				if( s_lightTool ) {
-					foreach( var p in s_lights ) {
-						OnToolLightItensity( s_lights.ToArray() );
-					}
-				}
-				if( s_lookAtTool ) {
-					foreach( var p in s_lights ) {
-						OnToolLightLookAt( s_lights.ToArray() );
-					}
-				}
+				SelectionHierarchy.current?.ComponetToolSceneView();
 			}
 
 #if TEST_FOV
@@ -300,65 +196,56 @@ namespace HananokiEditor.SceneViewTools {
 
 			var cont = EditorHelper.TempContent( EditorIcon.viewtoolorbit );
 			//var size = EditorStyles.miniButton.CalcSize( cont, GUILayout.Width(32) );
-			var x = ( Screen.width * 0.5f ) - ( 64 * 0.5f );
+			var x = ( Screen.width * 0.5f ) - ( 128 * 0.5f );
 			var y = Screen.height - ( 24 * 2 ) - ( 8 * 2 );
-			Rect r = new Rect( x, y, 32 * 2 + 4, 20 );
-			GUILayout.BeginArea( r );
-			GUILayout.BeginHorizontal();
-			if( 0 < s_lights.Length ) {
-				EditorGUI.BeginChangeCheck();
-				s_lightTool = GUILayout.Toggle( s_lightTool, EditorIcon.icons_processed_directionallight_icon_asset, EditorStyles.miniButton, GUILayout.Width( 32 ) );
-				if( EditorGUI.EndChangeCheck() ) {
-					Tools.current = Tool.None;
-					s_lookAtTool = false;
-				}
-				EditorGUI.BeginChangeCheck();
-				s_lookAtTool = GUILayout.Toggle( s_lookAtTool, EditorIcon.viewtoolorbit, EditorStyles.miniButton, GUILayout.Width( 32 ) );
-				if( EditorGUI.EndChangeCheck() ) {
-					Tools.current = Tool.None;
-					s_lightTool = false;
-				}
-			}
-			GUILayout.EndHorizontal();
-			GUILayout.EndArea();
+			Rect r = new Rect( x, y, 128 + 4, 20 );
+
+			ScopeArea.Begin( r );
+			ScopeHorizontal.Begin();
+			GUILayout.FlexibleSpace();
+			SelectionHierarchy.current?.ComponetToolGUI();
+			GUILayout.FlexibleSpace();
+			ScopeHorizontal.End();
+			ScopeArea.End();
 
 
-			GUILayout.BeginArea( new Rect( Screen.width - 200, 120, 200, Screen.height - 100 ) );
+			ScopeArea.Begin( new Rect( Screen.width - 200, 120, 200, Screen.height - 100 ) );
 			{
 #if ENABLE_TILEMAP
 				if( s_tileOn ) {
 					ShowWindowButton( UnityTypes.UnityEditor_Tilemaps_GridPaintPaletteWindow, "Tile Pallete", EditorIcon.icons_processed_unityengine_tilemaps_tilemap_icon_asset );
 				}
 #endif
-				if( 0 < s_lights.Length ) {
-					ShowWindowButton( UnityTypes.UnityEditor_LightingWindow, "Lighting", EditorIcon.lighting );
-					ShowWindowButton( UnityTypes.UnityEditor_LightingExplorerWindow, "Light Explorer", EditorIcon.lighting );
-				}
-				if( 0 < s_animator.Length ) {
-					ShowWindowButton( UnityTypes.UnityEditor_Graphs_AnimatorControllerTool, "Animator", EditorIcon.unityeditor_graphs_animatorcontrollertool );
-					ShowWindowButton( UnityTypes.UnityEditor_AnimationWindow, "Animation", EditorIcon.unityeditor_animationwindow );
-				}
+				SelectionHierarchy.current?.SideButtonGUI();
 			}
-			GUILayout.EndArea();
+			ScopeArea.End();
 		}
 
 
-		internal static void ShowWindowButton( Type type, string text, Texture2D image ) {
-			if( type == null ) return;
-			var _window = EditorWindowUtils.Find( type );
-			if( _window != null ) return;
 
+		internal static bool ShowSideButton( string text, Texture2D image ) {
+			bool result = false;
 			ScopeHorizontal.Begin();
 			GUILayout.FlexibleSpace();
 			var contt = EditorHelper.TempContent( text, image );
-			var aa = EditorStyles.label.CalcSize( text.content() );
-			var rr = GUILayoutUtility.GetRect( contt, s_styles.rightButton, GUILayout.Width( aa.x + 16 + 4 ) );
+			var rr = GUILayoutUtility.GetRect( contt, Styles.rightButton, GUILayout.Width( text.CalcSizeFromLabel().x + 16 + 4 ) );
 			EditorGUI.DrawRect( rr, E.i.uiBkColor );
-			if( GUI.Button( rr, contt, s_styles.rightButton ) ) {
-				var window = HEditorWindow.ShowWindow( type );
-				window.titleContent = new GUIContent( text, window.titleContent.image );
+			if( GUI.Button( rr, contt, Styles.rightButton ) ) {
+				result = true;
 			}
 			ScopeHorizontal.End();
+			return result;
+		}
+
+		internal static void ShowWindowButton( Type editorWindowType, string text, Texture2D image ) {
+			if( editorWindowType == null ) return;
+			var _window = EditorWindowUtils.Find( editorWindowType );
+			if( _window != null ) return;
+
+			if( ShowSideButton( text, image ) ) {
+				var window = HEditorWindow.ShowWindow( editorWindowType );
+				window.titleContent = new GUIContent( text, window.titleContent.image );
+			}
 		}
 
 
@@ -395,12 +282,12 @@ namespace HananokiEditor.SceneViewTools {
 			if( E.i.syncScene2Game ) {
 
 				string[] displayNames = new string[] { "None", "" };
-				ArrayUtility.AddRange( ref displayNames, cameras.Select<Camera, string>( c => c.name ).ToArray() );
+				ArrayUtility.AddRange( ref displayNames, cameras.Select( c => c.name ).ToArray() );
 
 				rcPop.width = 160;
 
 				//GUI.skin = EditorGUIUtility.GetBuiltinSkin( EditorSkin.Inspector );
-				s_cameraSelect = EditorGUI.Popup( rcPop, s_cameraSelect, displayNames, SceneViewTools.s_styles.popup );
+				s_cameraSelect = EditorGUI.Popup( rcPop, s_cameraSelect, displayNames, Styles.popup );
 
 				// Match GameView
 
@@ -432,7 +319,7 @@ namespace HananokiEditor.SceneViewTools {
 					rcRad.width = sz.x;
 					var rc = rcRad.AddW( 2 );
 					EditorGUI.DrawRect( rc, E.i.uiBkColor );
-					s_gameviewMatch = GUI.Toggle( rcRad, s_gameviewMatch, S._MatchGameView, s_styles.toggle );
+					s_gameviewMatch = GUI.Toggle( rcRad, s_gameviewMatch, S._MatchGameView, Styles.toggle );
 				}
 			}
 
@@ -450,7 +337,7 @@ namespace HananokiEditor.SceneViewTools {
 
 				var rc = rcToggle.AddW( 2 );
 				EditorGUI.DrawRect( rc, E.i.uiBkColor );
-				sceneView.orthographic = GUI.Toggle( rcToggle, sceneView.orthographic, cont, s_styles.toggle );
+				sceneView.orthographic = GUI.Toggle( rcToggle, sceneView.orthographic, cont, Styles.toggle );
 			}
 		}
 	}

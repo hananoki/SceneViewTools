@@ -6,6 +6,7 @@
     "Hananoki.SceneViewTools.Runtime",
     "Hananoki.SharedModule.Runtime",
     "Hananoki.SharedModule.RuntimeEditor",
+    "Hananoki.UnityReflection.Editor",
     "Hananoki.UnitySymbol.Editor"
   ],
   "includePlatforms": [
