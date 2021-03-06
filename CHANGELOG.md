@@ -1,5 +1,16 @@
 # Scene View Tools
 
+## [1.2.0] - 2021-03-06
+
+### Added
+- Added pivot tool
+  - Draw Box or Label
+- Added keyboard shortcut
+  - Correction by ray cast
+  - Reset Size
+  - Move
+  - Disable Selection
+
 ## [1.1.0] - 2021-03-01
 - SharedModule v1.7.7 or later
 

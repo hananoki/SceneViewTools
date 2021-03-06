@@ -4,6 +4,11 @@ using HananokiEditor.Extensions;
 using HananokiEditor.SharedModule;
 using UnityEditor;
 using UnityEngine;
+using HananokiRuntime.Extensions;
+using System.Collections.Generic;
+using System;
+using UnityEditor;
+using UnityEngine;
 
 using E = HananokiEditor.SceneViewTools.SettingsEditor;
 using SS = HananokiEditor.SharedModule.S;
@@ -16,20 +21,82 @@ namespace HananokiEditor.SceneViewTools {
 
 		public bool Enable = true;
 
-		public bool multiSceneExec = true;
+		public int flag;
 
-		public bool enableTimeScaleSlider = true;
-		public bool toggleOrthographic = false;
-		public bool syncScene2Game = true;
+		#region Constant
+
+		const int MULTI_SCENE_EXEC = ( 1 << 0 );
+		const int ENABLE_TIME_SCALE_SLIDER = ( 1 << 1 );
+		const int TOGGLE_ORTHOGRAPHIC = ( 1 << 2 );
+		const int SYNC_SCENE2GAME = ( 1 << 3 );
+		const int TOOLS = ( 1 << 4 );
+
+		const int DRAW_PIVOT_BOX = ( 1 << 5 );
+		const int DRAW_PIVOT_LABEL = ( 1 << 6 );
+		const int RESET_PIVOT_SIZE = ( 1 << 7 );
+		const int RAYCAST_PIVOT = ( 1 << 8 );
+		const int DISABLE_SELECTION = ( 1 << 9 );
+		const int WSAD_MOVE = ( 1 << 10 );
+
+		#endregion
+
+
+		#region Property
+
+		public bool multiSceneExec {
+			get => flag.Has( MULTI_SCENE_EXEC );
+			set => flag.Toggle( MULTI_SCENE_EXEC, value );
+		}
+		public bool enableTimeScaleSlider {
+			get => flag.Has( ENABLE_TIME_SCALE_SLIDER );
+			set => flag.Toggle( ENABLE_TIME_SCALE_SLIDER, value );
+		}
+		public bool toggleOrthographic {
+			get => flag.Has( TOGGLE_ORTHOGRAPHIC );
+			set => flag.Toggle( TOGGLE_ORTHOGRAPHIC, value );
+		}
+		public bool syncScene2Game {
+			get => flag.Has( SYNC_SCENE2GAME );
+			set => flag.Toggle( SYNC_SCENE2GAME, value );
+		}
+		public bool tools {
+			get => flag.Has( TOOLS );
+			set => flag.Toggle( TOOLS, value );
+		}
+		public bool drawPivotBox {
+			get => flag.Has( DRAW_PIVOT_BOX );
+			set => flag.Toggle( DRAW_PIVOT_BOX, value );
+		}
+		public bool drawPivotLabel {
+			get => flag.Has( DRAW_PIVOT_LABEL );
+			set => flag.Toggle( DRAW_PIVOT_LABEL, value );
+		}
+		public bool resetPivotSize {
+			get => flag.Has( RESET_PIVOT_SIZE );
+			set => flag.Toggle( RESET_PIVOT_SIZE, value );
+		}
+		public bool raycastPivot {
+			get => flag.Has( RAYCAST_PIVOT );
+			set => flag.Toggle( RAYCAST_PIVOT, value );
+		}
+		public bool disableSelection {
+			get => flag.Has( DISABLE_SELECTION );
+			set => flag.Toggle( DISABLE_SELECTION, value );
+		}
+		public bool wsadMove {
+			get => flag.Has( WSAD_MOVE );
+			set => flag.Toggle( WSAD_MOVE, value );
+		}
+
+		#endregion
+
+
 		public Color uiBkColor = new Color( 0, 0, 0, 0.10f );
 		public Color textColor = Color.white;
-
-		public bool tools = false;
 
 
 		public static E i;
 
-		public PreferencesGUICallback s_preferencesGUICallback;
 
 
 		public static void Load() {
@@ -41,94 +108,4 @@ namespace HananokiEditor.SceneViewTools {
 			EditorPrefJson<E>.Set( Package.editorPrefName, i );
 		}
 	}
-
-
-
-	public class SettingsEditorWindow : HSettingsEditorWindow {
-
-		public static void Open() {
-			var w = GetWindow<SettingsEditorWindow>();
-			w.SetTitle( new GUIContent( Package.name, EditorIcon.settings ) );
-			w.headerMame = Package.name;
-			w.headerVersion = Package.version;
-			w.gui = DrawGUI;
-		}
-
-
-		public static void DrawGUI() {
-			E.Load();
-
-			EditorGUI.BeginChangeCheck();
-
-			E.i.Enable = HEditorGUILayout.ToggleLeft( SS._Enable, E.i.Enable );
-			EditorGUI.indentLevel++;
-			GUILayout.Space( 8f );
-			using( new EditorGUI.DisabledGroupScope( !E.i.Enable ) ) {
-				E.i.multiSceneExec = HEditorGUILayout.ToggleLeft( S._Executeevenwithmultiplesceneviews, E.i.multiSceneExec );
-
-				E.i.enableTimeScaleSlider = HEditorGUILayout.ToggleLeft( S._TimeScaleSlider, E.i.enableTimeScaleSlider );
-				E.i.syncScene2Game = HEditorGUILayout.ToggleLeft( S._Syncscenecameratogamecamera, E.i.syncScene2Game );
-				E.i.toggleOrthographic = HEditorGUILayout.ToggleLeft( S._ToggleOrthographic, E.i.toggleOrthographic );
-
-				E.i.uiBkColor = EditorGUILayout.ColorField( SS._BackColor, E.i.uiBkColor );
-				E.i.textColor = EditorGUILayout.ColorField( SS._TextColor, E.i.textColor );
-
-				GUILayout.Space( 8f );
-				EditorGUILayout.LabelField( $"* {SS._Experimental}", EditorStyles.boldLabel );
-				E.i.tools = HEditorGUILayout.ToggleLeft( "Tool (UNITY_2019_1_OR_NEWER)", E.i.tools );
-			}
-			EditorGUI.indentLevel--;
-			//}
-
-			if( EditorGUI.EndChangeCheck() ) {
-				E.Save();
-				SceneViewUtils.Repaint();
-			}
-#if TEST_OBJECTSTAT
-			if( GUILayout.Button( "ObjectStat" ) ) {
-				ObjectStat.Enable();
-			}
-#endif
-			
-		}
-
-
-#if !ENABLE_HANANOKI_SETTINGS
-#if UNITY_2018_3_OR_NEWER && !ENABLE_LEGACY_PREFERENCE
-
-		[SettingsProvider]
-		public static SettingsProvider PreferenceView() {
-			var provider = new SettingsProvider( $"Preferences/Hananoki/{Package.name}", SettingsScope.User ) {
-				label = $"{Package.name}",
-				guiHandler = PreferencesGUI,
-				titleBarGuiHandler = () => GUILayout.Label( $"{Package.version}", EditorStyles.miniLabel ),
-			};
-			return provider;
-		}
-
-		public static void PreferencesGUI( string searchText ) {
-#else
-		[PreferenceItem( Package.name )]
-		public static void PreferencesGUI() {
-#endif
-			using( new LayoutScope() ) DrawGUI();
-		}
-#endif
-	}
-
-
-
-#if ENABLE_HANANOKI_SETTINGS
-	public class SettingsEvent {
-		[HananokiSettingsRegister]
-		public static SettingsItem RegisterSettings() {
-			return new SettingsItem() {
-				//mode = 1,
-				displayName = Package.nameNicify,
-				version = Package.version,
-				gui = SettingsEditorWindow.DrawGUI,
-			};
-		}
-	}
-#endif
 }

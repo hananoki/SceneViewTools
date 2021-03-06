@@ -11,6 +11,7 @@ using System.Collections;
 using System;
 using HananokiRuntime;
 using HananokiRuntime.Extensions;
+using System.Runtime.InteropServices;
 
 #if UNITY_2019_1_OR_NEWER
 using UnityEditor.EditorTools;
@@ -37,8 +38,25 @@ namespace HananokiEditor.SceneViewTools {
 		public abstract void OnSceneView( IEnumerable<Component> conponents );
 	}
 
+
+
 	[InitializeOnLoad]
 	internal partial class SceneViewTools {
+
+#if UNITY_EDITOR_WIN
+		[DllImport( "user32.dll" )]
+		public static extern bool SetCursorPos( int x, int y );
+		[StructLayout( LayoutKind.Sequential, Pack = 2 )]
+		public struct POINT {
+			public int x, y;
+
+			//public override string ToString() {
+			//	return "(" + x + "," + y + ")";
+			//}
+		}
+		[DllImport( "user32.dll" )]
+		public static extern bool GetCursorPos( out POINT point );
+#endif
 
 		internal static Hashtable m_shortCuts;
 		internal static Hashtable m_componetTool;
@@ -170,6 +188,50 @@ namespace HananokiEditor.SceneViewTools {
 			Styles.toggle.normal.textColor = E.i.textColor;
 			Styles.rightButton.normal.textColor = E.i.textColor;
 
+			if( E.i.drawPivotBox ) {
+				Handles.CubeHandleCap( 0, sceneView.pivot, Quaternion.identity, HandleUtility.GetHandleSize( sceneView.pivot ) * 0.05f, EventType.Repaint );
+				if( E.i.drawPivotLabel ) {
+					Handles.Label( sceneView.pivot, $"{( sceneView.pivot - sceneView.camera.transform.position ).magnitude:f2} : {sceneView.pivot.ToString()}", EditorStyles.whiteLabel );
+				}
+			}
+			//var scn = new UnityEditorSceneView( sceneView );
+			try {
+				if( E.i.wsadMove ) {
+					bool change = false;
+					if( Event.current.keyCode == KeyCode.D ) {
+						sceneView.pivot += sceneView.rotation * new Vector3( 0.1f, 0, 0 );
+						change = true;
+					}
+					if( Event.current.keyCode == KeyCode.A ) {
+						sceneView.pivot += sceneView.rotation * new Vector3( -0.1f, 0, 0 );
+						change = true;
+					}
+					if( Event.current.keyCode == KeyCode.W ) {
+						sceneView.pivot += sceneView.rotation * new Vector3( 0.0f, 0, 0.1f );
+						change = true;
+					}
+					if( Event.current.keyCode == KeyCode.S ) {
+						sceneView.pivot += sceneView.rotation * new Vector3( 0.0f, 0, -0.1f );
+						change = true;
+					}
+					if( Event.current.keyCode == KeyCode.E ) {
+						sceneView.pivot += new Vector3( 0.0f, 0.1f, 0.0f );
+						change = true;
+					}
+					if( Event.current.keyCode == KeyCode.Q ) {
+						sceneView.pivot += new Vector3( 0.0f, -0.1f, 0.0f );
+						change = true;
+					}
+					if( change ) {
+						sceneView.Repaint();
+					}
+				}
+			}
+			catch( Exception e ) {
+			}
+			//scn.m_instance.SetProperty<int>( "draggingLocked", 1 );
+			//UnityEditorSceneViewMotion.DoViewTool( sceneView );
+
 			using( new GUISkinScope( EditorSkin.Inspector ) )
 			using( new HandlesGUIScope() ) {
 				DrawLeftBottom( sceneView );
@@ -181,6 +243,62 @@ namespace HananokiEditor.SceneViewTools {
 
 			if( E.i.tools ) {
 				SelectionHierarchy.current?.ComponetToolSceneView();
+			}
+			//Cursor.lockState = CursorLockMode.None;
+			//Debug.Log( Cursor.lockState );
+			if( E.i.resetPivotSize ) {
+				if( Event.current.keyCode == KeyCode.G ) {
+					sceneView.size = 2.5f;
+				}
+			}
+			if( E.i.disableSelection ) {
+				if( Event.current.keyCode == KeyCode.Space ) {
+					Selection.activeObject = null;
+				}
+			}
+
+			if( E.i.raycastPivot ) {
+				if( Event.current.alt && alton == false ) {
+					if( alton == false ) {
+						alton = true;
+						//Cursor.lockState = CursorLockMode.Locked;
+						//Cursor.visible = false;
+						//GetCursorPos( out mpoint );
+						//
+						mpoint = Event.current.mousePosition;
+						var rr = new Rect( mpoint, Vector2.zero );
+						rr = HGUIUtility.GUIToScreenRect( rr );
+						mpoint.x = rr.x;
+						mpoint.y = rr.y;
+						//Debug.Log( $"{mpoint.x}, {mpoint.y}" );
+
+						var dir = sceneView.pivot - sceneView.camera.transform.position;
+						dir.Normalize();
+						var his = Physics.RaycastAll( sceneView.camera.transform.position, dir, 1000f );
+						if( 0 < his.Length ) {
+							var hhit = his.OrderBy( x => x.distance ).First().point;
+							sceneView.pivot = hhit;
+							var ss = ( hhit - sceneView.camera.transform.position ).magnitude / 2;
+							sceneView.size = ss;
+							//sceneView.LookAt( hhit, sceneView.camera.transform.rotation, 100 );
+							//Debug.Log( ss );
+
+						}
+
+						//sceneView.pivot = sceneView.camera.transform.position + ( dir * 30.0f );
+						//sceneView.camera.transform.position=sceneView.pivot + ( -dir * 30.0f );
+						//sceneView.size = 15;
+					}
+				}
+				if( Event.current.type == EventType.KeyUp/*|| Event.current.type == EventType.MouseUp*/ ) {
+					alton = false;
+					Cursor.lockState = CursorLockMode.None;
+					//Cursor.visible = true;
+					//SetCursorPos( (int) mpoint.x, (int) mpoint.y );
+				}
+				//if( alton ) {
+				//	SetCursorPos( (int) mpoint.x, (int) mpoint.y );
+				//}
 			}
 
 #if TEST_FOV
@@ -237,6 +355,8 @@ namespace HananokiEditor.SceneViewTools {
 			return result;
 		}
 
+
+
 		internal static void ShowWindowButton( Type editorWindowType, string text, Texture2D image ) {
 			if( editorWindowType == null ) return;
 			var _window = EditorWindowUtils.Find( editorWindowType );
@@ -248,6 +368,8 @@ namespace HananokiEditor.SceneViewTools {
 			}
 		}
 
+		static bool alton = false;
+		static Vector2 mpoint;
 
 		internal static void DrawRightBottom( SceneView sceneView ) {
 			if( !E.i.enableTimeScaleSlider ) return;
@@ -266,6 +388,24 @@ namespace HananokiEditor.SceneViewTools {
 			//EditorGUI.DrawRect( rcPop, new Color(0,0,1,0.50f));
 
 			Time.timeScale = EditorGUI.Slider( rcPop, Time.timeScale, 0.00f, 1.00f );
+
+			Rect rrr = new Rect( Screen.width, Screen.height - ( 24 * 2 ), 0, 0 );
+			rrr.x -= 16;
+			rrr.width = 16;
+			rrr.y -= 32;
+			rrr.height = 16;
+			//if( GUI.Button( rrr, "b" ) ) {
+			//	var dir = sceneView.pivot - sceneView.camera.transform.position;
+			//	dir.Normalize();
+
+			//	//sceneView.pivot = sceneView.camera.transform.position + ( dir * 30.0f );
+			//	//sceneView.camera.transform.position=sceneView.pivot + ( -dir * 30.0f );
+			//	sceneView.size = 15;
+			//}
+
+			rrr.x -= 16;
+
+
 		}
 
 
