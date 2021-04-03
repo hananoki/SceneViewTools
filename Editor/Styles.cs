@@ -1,13 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using UnityEditor;
 using UnityEngine;
-
-using System;
-using UnityEngine;
-using HananokiEditor;
-using HananokiRuntime;
-
-using UnityEditor;
 
 namespace HananokiEditor.SceneViewTools {
 

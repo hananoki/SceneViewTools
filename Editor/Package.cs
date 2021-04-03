@@ -6,6 +6,6 @@ namespace HananokiEditor.SceneViewTools {
     public const string name = "SceneViewTools";
     public const string nameNicify = "Scene View Tools";
     public const string editorPrefName = "Hananoki.SceneViewTools";
-    public const string version = "1.2.0";
+    public const string version = "1.3.0";
   }
 }

@@ -1,5 +1,14 @@
 # Scene View Tools
 
+## [1.3.0] - 2021-04-03
+
+### Added
+- Added Hide the mouse when dragging (UNITY_EDITOR_WIN)
+- AddedDraw the axis from the origin
+
+### Changed
+- Organized code format and unused using
+
 ## [1.2.0] - 2021-03-06
 
 ### Added

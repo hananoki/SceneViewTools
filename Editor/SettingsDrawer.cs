@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using HananokiEditor.Extensions;
-using HananokiEditor.SharedModule;
+﻿using HananokiEditor.SharedModule;
 using UnityEditor;
 using UnityEngine;
 using E = HananokiEditor.SceneViewTools.SettingsEditor;
 using SS = HananokiEditor.SharedModule.S;
+
 
 namespace HananokiEditor.SceneViewTools {
 	public class SettingsDrawer_Main {
@@ -22,7 +19,7 @@ namespace HananokiEditor.SceneViewTools {
 		}
 
 
-
+		/////////////////////////////////////////
 		public static void DrawGUI() {
 			E.Load();
 
@@ -42,36 +39,43 @@ namespace HananokiEditor.SceneViewTools {
 				E.i.textColor = EditorGUILayout.ColorField( SS._TextColor, E.i.textColor );
 
 				GUILayout.Space( 8f );
-				EditorGUILayout.LabelField( $"* {SS._Experimental}", EditorStyles.boldLabel );
+
+				/////////////////////////
+				HEditorGUILayout.HeaderTitle( $"* {SS._Experimental}" );
+
 				E.i.tools = HEditorGUILayout.ToggleLeft( "Tool (UNITY_2019_1_OR_NEWER)", E.i.tools );
 				E.i.drawPivotBox = HEditorGUILayout.ToggleLeft( "Draw Pivot Box", E.i.drawPivotBox );
 				EditorGUI.indentLevel++;
-				ScopeDisable.Begin(!E.i.drawPivotBox );
+				ScopeDisable.Begin( !E.i.drawPivotBox );
 				E.i.drawPivotLabel = HEditorGUILayout.ToggleLeft( "Label", E.i.drawPivotLabel );
 				ScopeDisable.End();
 				EditorGUI.indentLevel--;
 
 				E.i.raycastPivot = HEditorGUILayout.ToggleLeft( "RayCast Pivot (Alt)", E.i.raycastPivot );
 				E.i.resetPivotSize = HEditorGUILayout.ToggleLeft( "Reset Pivot Size (G)", E.i.resetPivotSize );
-				E.i.wsadMove = HEditorGUILayout.ToggleLeft( "Pivot Move (W,A,S,D,Q,E)", E.i.wsadMove );
 				E.i.disableSelection = HEditorGUILayout.ToggleLeft( "Disable Selection (Space)", E.i.disableSelection );
-				
+
+				E.i.mouseDrag = HEditorGUILayout.ToggleLeft( "Hide the mouse when dragging (UNITY_EDITOR_WIN)", E.i.mouseDrag );
+				E.i.crossLine = HEditorGUILayout.ToggleLeft( "Draw the axis from the origin", E.i.crossLine );
+
+				GUILayout.Space( 8f );
+
+
+				/////////////////////////
+				HEditorGUILayout.HeaderTitle( $"* Obsolete" );
+
+				E.i.wsadMove = HEditorGUILayout.ToggleLeft( "Pivot Move (W,A,S,D,Q,E)", E.i.wsadMove );
+
+				GUILayout.Space( 8f );
 			}
 			EditorGUI.indentLevel--;
 			//}
 
 			if( ScopeChange.End() ) {
+				SceneViewTools.InitDragMouse();
 				E.Save();
 				SceneViewUtils.Repaint();
 			}
-#if TEST_OBJECTSTAT
-			if( GUILayout.Button( "ObjectStat" ) ) {
-				ObjectStat.Enable();
-			}
-#endif
-
 		}
-
-
 	}
 }

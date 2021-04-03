@@ -1,17 +1,8 @@
 ﻿#define ENABLE_HANANOKI_SETTINGS
 
-using HananokiEditor.Extensions;
-using HananokiEditor.SharedModule;
-using UnityEditor;
-using UnityEngine;
 using HananokiRuntime.Extensions;
-using System.Collections.Generic;
-using System;
-using UnityEditor;
 using UnityEngine;
-
 using E = HananokiEditor.SceneViewTools.SettingsEditor;
-using SS = HananokiEditor.SharedModule.S;
 
 namespace HananokiEditor.SceneViewTools {
 
@@ -37,6 +28,8 @@ namespace HananokiEditor.SceneViewTools {
 		const int RAYCAST_PIVOT = ( 1 << 8 );
 		const int DISABLE_SELECTION = ( 1 << 9 );
 		const int WSAD_MOVE = ( 1 << 10 );
+		const int MOUSE_DRAG = ( 1 << 11 );
+		const int CROSS_LINE = ( 1 << 12 );
 
 		#endregion
 
@@ -87,6 +80,14 @@ namespace HananokiEditor.SceneViewTools {
 			get => flag.Has( WSAD_MOVE );
 			set => flag.Toggle( WSAD_MOVE, value );
 		}
+		public bool mouseDrag {
+			get => flag.Has( MOUSE_DRAG );
+			set => flag.Toggle( MOUSE_DRAG, value );
+		}
+		public bool crossLine {
+			get => flag.Has( CROSS_LINE );
+			set => flag.Toggle( CROSS_LINE, value );
+		}
 
 		#endregion
 
@@ -98,12 +99,14 @@ namespace HananokiEditor.SceneViewTools {
 		public static E i;
 
 
-
+		/////////////////////////////////////////
 		public static void Load() {
 			if( i != null ) return;
 			i = EditorPrefJson<E>.Get( Package.editorPrefName );
 		}
 
+
+		/////////////////////////////////////////
 		public static void Save() {
 			EditorPrefJson<E>.Set( Package.editorPrefName, i );
 		}

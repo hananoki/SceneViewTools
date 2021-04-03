@@ -1,6 +1,5 @@
 ﻿using HananokiEditor.Extensions;
 using HananokiRuntime.Extensions;
-using HananokiRuntime;
 using System;
 using System.Collections;
 using System.Linq;
@@ -20,8 +19,7 @@ namespace HananokiEditor.SceneViewTools {
 		public static SelectionData current => s_current;
 
 
-
-
+		/////////////////////////////////////////
 		static SelectionHierarchy() {
 			EditorApplication.hierarchyChanged += OnHierarchyChanged;
 			Selection.selectionChanged += OnSelectionChanged;
@@ -29,13 +27,14 @@ namespace HananokiEditor.SceneViewTools {
 		}
 
 
-
+		/////////////////////////////////////////
 		static void CreateHashTable() {
 			s_componets = new Hashtable( 256 );
 			s_current = null;
 		}
 
 
+		/////////////////////////////////////////
 		static void OnHierarchyChanged() {
 			CreateHashTable();
 			OnSelectionChanged();
@@ -43,12 +42,13 @@ namespace HananokiEditor.SceneViewTools {
 		}
 
 
+		/////////////////////////////////////////
 		static void OnSceneOpened( UnityScene scene, OpenSceneMode mode ) {
 			CreateHashTable();
 		}
 
 
-
+		/////////////////////////////////////////
 		static void OnSelectionChanged() {
 			if( s_componets == null ) {
 				CreateHashTable();
@@ -68,8 +68,9 @@ namespace HananokiEditor.SceneViewTools {
 				s_componets.Add( go.GetInstanceID(), s_current );
 			}
 		}
-
 	}
+
+
 
 	public class SelectionData {
 		public Component[] components;
