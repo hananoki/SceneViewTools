@@ -1,4 +1,4 @@
-﻿//#define TEST_FOV
+﻿
 //#define TEST_TILE
 
 using HananokiEditor.Extensions;
@@ -67,10 +67,6 @@ namespace HananokiEditor.SceneViewTools {
 		internal static Hashtable m_componetTool;
 
 
-#if TEST_FOV
-		static float FOV = -1;
-#endif
-
 #if ENABLE_TILEMAP
 		static bool s_tileOn;
 #endif
@@ -119,17 +115,16 @@ namespace HananokiEditor.SceneViewTools {
 			}
 
 
-#if UNITY_EDITOR_WIN
 			InitDragMouse();
-#endif
 		}
 
 
 
-#if UNITY_EDITOR_WIN
 
 		/////////////////////////////////////////
+		[System.Diagnostics.Conditional( "UNITY_EDITOR_WIN" )]
 		internal static void InitDragMouse() {
+#if UNITY_EDITOR_WIN
 			EditorApplication.update -= OnUpdate;
 			if( !E.i.mouseDrag ) return;
 
@@ -150,11 +145,15 @@ namespace HananokiEditor.SceneViewTools {
 				s_hWnd = hWnd;
 				return 0;
 			}
+#endif
 		}
 
 
+
 		/////////////////////////////////////////
+		[System.Diagnostics.Conditional( "UNITY_EDITOR_WIN" )]
 		static void SetDrag( bool toggle ) {
+#if UNITY_EDITOR_WIN
 			if( toggle ) {
 				if( !s_drag ) {
 					Win32API.ShowCursor( false );
@@ -169,11 +168,13 @@ namespace HananokiEditor.SceneViewTools {
 					s_drag = false;
 				}
 			}
+#endif
 		}
 
 
 		/////////////////////////////////////////
 		static void OnUpdate() {
+#if UNITY_EDITOR_WIN
 			if( s_hWnd != Win32API.GetForegroundWindow() ) {
 				SetDrag( false );
 				return;
@@ -217,8 +218,8 @@ namespace HananokiEditor.SceneViewTools {
 				}
 			}
 			buttonFlagOld = buttonFlag;
-		}
 #endif
+		}
 
 
 
@@ -279,18 +280,6 @@ namespace HananokiEditor.SceneViewTools {
 		}
 
 
-#if TEST_FOV
-		public static void OnScene( SceneView sceneView ) {
-			if( sceneView != null || sceneView.camera != null ) {
-				if( FOV < 0.0f ) {
-					FOV = sceneView.camera.fieldOfView;
-				}
-				sceneView.camera.fieldOfView = FOV;
-			}
-		}
-#endif
-
-
 		/////////////////////////////////////////
 		public static void OnSceneGUI( SceneView sceneView ) {
 			if( !E.i.Enable ) return;
@@ -310,7 +299,7 @@ namespace HananokiEditor.SceneViewTools {
 					Handles.Label( sceneView.pivot, $"{( sceneView.pivot - sceneView.camera.transform.position ).magnitude:f2} : {sceneView.pivot.ToString()}", EditorStyles.whiteLabel );
 				}
 			}
-			//var scn = new UnityEditorSceneView( sceneView );
+			
 			try {
 				if( E.i.wsadMove ) {
 					bool change = false;
@@ -409,16 +398,43 @@ namespace HananokiEditor.SceneViewTools {
 				}
 			}
 
-			if( E.i.crossLine ) {
-				Handles.DrawLine( new Vector3( 10, 0, 0 ), new Vector3( -10, 0, 0 ) );
-				Handles.DrawLine( new Vector3( 0, 0, 10 ), new Vector3( 0, 0, -10 ) );
-				Handles.DrawLine( new Vector3( 0, 10, 0 ), new Vector3( 0, -10, 0 ) );
-			}
+			if( E.i.crossLine ) 原点クロス描画();
 
-#if TEST_FOV
-				rcPop.y -= 24;
-				FOV = EditorGUI.Slider( rcPop, FOV, 0.01f, 180.00f );
-#endif
+
+			//{
+			//	CameraOnSceneGUI();
+			//}
+		}
+
+		static void CameraOnSceneGUI() {
+			var cameras = UnityObject.FindObjectsOfType<Camera>();
+			foreach( Camera camera in cameras ) {
+				bool flag2 = !CameraEditorUtils.IsViewportRectValidToRender( camera.rect );
+				if( !flag2 ) {
+					//Vector2 mainPlayModeViewTargetSize = PlayModeView.GetMainPlayModeViewTargetSize();
+					//bool flag3 = CameraEditor.s_PreviousMainPlayModeViewTargetSize != mainPlayModeViewTargetSize;
+					//if( flag3 ) {
+					//	base.Repaint();
+					//	CameraEditor.s_PreviousMainPlayModeViewTargetSize = mainPlayModeViewTargetSize;
+					//}
+					CameraEditorUtils.HandleFrustum( camera, 0 );
+				}
+			}
+		}
+		//internal virtual int referenceTargetIndex {
+		//	get {
+		//		return Mathf.Clamp( this.m_ReferenceTargetIndex, 0, this.m_Targets.Length - 1 );
+		//	}
+		//	set {
+		//		this.m_ReferenceTargetIndex = ( Math.Abs( value * this.m_Targets.Length ) + value ) % this.m_Targets.Length;
+		//	}
+		//}
+
+
+		internal static void 原点クロス描画() {
+			Handles.DrawLine( new Vector3( 10, 0, 0 ), new Vector3( -10, 0, 0 ) );
+			Handles.DrawLine( new Vector3( 0, 0, 10 ), new Vector3( 0, 0, -10 ) );
+			Handles.DrawLine( new Vector3( 0, 10, 0 ), new Vector3( 0, -10, 0 ) );
 		}
 
 

@@ -1,5 +1,13 @@
 # Scene View Tools
 
+## [1.4.0] - 2021-06-27
+
+### Added
+- Added SphereColliderTool
+
+### Changed
+- Changed to apply Conditional attribute
+
 ## [1.3.0] - 2021-04-03
 
 ### Added
